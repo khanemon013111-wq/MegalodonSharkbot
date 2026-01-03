@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="monetag" content="d686104263ea095e5938f6f704b745b3">
+    
+    <script src='//libtl.com/sdk.js' data-zone='10414428' data-sdk='show_10414428'></script>
+    
     <title>SHARK TOKEN - Official TON Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -55,8 +58,7 @@
 <body>
 
     <div id="ad-overlay">
-        <h2 style="color: var(--primary);">WATCHING AD...</h2>
-        <div id="timer" style="font-size: 60px; font-weight: 800; margin: 20px;">15</div>
+        <h2 style="color: var(--primary);">LOADING AD...</h2>
         <p>Wait to claim 500 $SHARK</p>
     </div>
 
@@ -197,23 +199,23 @@
             document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
         }
 
+        // নতুন অ্যাড ফাংশন - যা আপনার বটের ব্যালেন্স আপডেট করবে
         function watchAdToClaim() {
-            // দাদু, এখানে আমি মনিটেগের আপনার ড্যাশবোর্ডের লিঙ্কটি দিয়ে রেখেছি।
-            // আপনি জোন আইডি বানালে সেটি দিয়ে আমরা আপডেট করব।
-            window.open("https://publishers.monetag.com/", '_blank');
             const overlay = document.getElementById('ad-overlay');
             overlay.style.display = 'flex';
-            let sec = 15;
-            const run = setInterval(() => {
-                sec--; document.getElementById('timer').innerText = sec;
-                if(sec <= 0) {
-                    clearInterval(run); overlay.style.display = 'none';
-                    db.ref('users/' + userId).once('value', s => {
-                        db.ref('users/' + userId).update({ balance: (s.val().balance || 0) + 500 });
-                        alert("500 $SHARK Bonus Added!");
-                    });
-                }
-            }, 1000);
+
+            // Monetag Rewarded Ad Call
+            show_10414428().then(() => {
+                overlay.style.display = 'none';
+                db.ref('users/' + userId).once('value', s => {
+                    let currentBal = (s.val() && s.val().balance) ? s.val().balance : 0;
+                    db.ref('users/' + userId).update({ balance: currentBal + 500 });
+                    alert("Reward Claimed: 500 $SHARK!");
+                });
+            }).catch((e) => {
+                overlay.style.display = 'none';
+                alert("Ad not ready yet. Please try again later.");
+            });
         }
 
         function completeTask(taskId, reward, link) {
