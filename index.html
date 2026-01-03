@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="monetag" content="d686104263ea095e5938f6f704b745b3">
     <title>SHARK TOKEN - Official TON Edition</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -120,7 +121,6 @@
     <script>
         lucide.createIcons();
 
-        // দাদু, আপনার নতুন ফায়ারবেস কনফিগ (Shark Bot) এখানে বসিয়ে দিয়েছি
         const firebaseConfig = {
             apiKey: "AIzaSyDJzyYMY4Iy@shwXkPz7c5ppWr75Wn9ngY",
             authDomain: "shark-bot-c515b.firebaseapp.com",
@@ -128,7 +128,7 @@
             storageBucket: "shark-bot-c515b.firebasestorage.app",
             messagingSenderId: "761875988504",
             appId: "1:761875988504:web:f53a58bc053e4846b6036d",
-            databaseURL: "https://shark-bot-c515b-default-rtdb.firebaseio.com" // এটি আপনার স্ক্রিনশট অনুযায়ী যোগ করা হলো
+            databaseURL: "https://shark-bot-c515b-default-rtdb.firebaseio.com"
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -139,11 +139,6 @@
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
         const firstName = tg.initDataUnsafe?.user?.first_name || "Shark User";
         const startParam = tg.initDataUnsafe?.start_param;
-
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://raw.githubusercontent.com/ton-connect/demo-dapp-with-react/master/public/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect-btn'
-        });
 
         function initUser() {
             if (userId === "guest") return;
@@ -203,7 +198,9 @@
         }
 
         function watchAdToClaim() {
-            window.open("https://www.effectivegatecpm.com/rarb5qds06?key=79349eb6a9357e2e416a3ef19425a5c1", '_blank');
+            // দাদু, এখানে আমি মনিটেগের আপনার ড্যাশবোর্ডের লিঙ্কটি দিয়ে রেখেছি।
+            // আপনি জোন আইডি বানালে সেটি দিয়ে আমরা আপডেট করব।
+            window.open("https://publishers.monetag.com/", '_blank');
             const overlay = document.getElementById('ad-overlay');
             overlay.style.display = 'flex';
             let sec = 15;
@@ -250,5 +247,5 @@
         initUser();
     </script>
 </body>
-                                                                                                                 </html>
-    
+    </html>
+
