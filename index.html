@@ -14,28 +14,33 @@
     <style>
         :root {
             --primary: #00b4d8; --secondary: #0077b6; --bg: #000814;
-            --card: rgba(0, 119, 182, 0.1); --text: #caf0f8; --ton: #0088cc;
+            --card: rgba(0, 119, 182, 0.1); --text: #caf0f8;
         }
 
         body { margin: 0; background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         .screen { display: none; padding: 20px; height: 85vh; overflow-y: auto; text-align: center; }
         .active-screen { display: block; }
 
-        .shark-logo { font-size: 80px; margin: 30px 0 10px; filter: drop-shadow(0 0 15px var(--primary)); }
+        /* লোগো এবং ব্যালেন্স ফিক্স */
+        .shark-logo { font-size: 80px; margin: 30px 0 10px; filter: drop-shadow(0 0 15px var(--primary)); display: block; }
         .balance-val { font-size: 55px; font-weight: 900; color: var(--text); margin-bottom: 30px; }
 
-        .info-card { background: var(--card); border: 1px solid var(--secondary); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
-
-        .task-list { margin-top: 30px; text-align: left; }
-        .task-item {
-            background: rgba(255,255,255,0.05); border-radius: 15px;
-            padding: 15px; display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 12px; border: 1px solid rgba(0, 180, 216, 0.1);
+        /* কার্ডের সব লেখা ও বাটন মাঝখানে আনার জন্য */
+        .info-card { 
+            background: var(--card); border: 1px solid var(--secondary); border-radius: 20px; 
+            padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center;
         }
-        .task-btn { background: var(--primary); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        #ton-connect-btn { display: flex; justify-content: center; margin: 15px 0; }
-        .address-box { font-size: 11px; color: var(--primary); word-break: break-all; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; display: none; }
+        .task-list, .friend-list { margin-top: 20px; text-align: left; width: 100%; }
+        .task-item, .friend-item {
+            background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 12px; border: 1px solid rgba(0, 180, 216, 0.1);
+        }
+
+        /* ওয়ালেট বাটন সেন্টার ফিক্স */
+        #ton-connect-btn { display: flex; justify-content: center; align-items: center; margin: 15px auto; width: 100%; }
 
         #nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #001219; border-top: 1px solid var(--secondary); display: flex; justify-content: space-around; align-items: center; }
         .nav-item { color: #555; text-align: center; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center;}
@@ -43,8 +48,10 @@
         .nav-label { font-size: 11px; font-weight: bold; margin-top: 5px; }
 
         .btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; padding: 18px; color: white; border-radius: 15px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .task-btn { background: var(--primary); border: none; padding: 8px 15px; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; }
         
         #ad-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+        .invite-stat { font-size: 18px; color: var(--primary); margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -64,63 +71,60 @@
         </button>
 
         <div class="task-list">
-            <h4 style="color: var(--primary); margin-left: 5px;">EARN MORE</h4>
+            <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">EARN MORE</h4>
             <div class="task-item">
-                <div class="task-info"><b>Join Channel</b><br><small>+10,000 $SHARK</small></div>
+                <div><b>Join Channel</b><br><small>+10,000 $SHARK</small></div>
                 <button class="task-btn" onclick="completeTask('tg_task', 10000, 'https://t.me/your_channel')">JOIN</button>
             </div>
             <div class="task-item">
-                <div class="task-info"><b>Subscribe YouTube</b><br><small>+15,000 $SHARK</small></div>
+                <div><b>Subscribe YouTube</b><br><small>+15,000 $SHARK</small></div>
                 <button class="task-btn" onclick="completeTask('yt_task', 15000, 'https://youtube.com/@your_channel')">SUB</button>
             </div>
         </div>
     </div>
 
     <div id="invite" class="screen">
-        <i data-lucide="users" style="width: 80px; height: 80px; color: var(--primary); margin-top: 40px;"></i>
-        <h2 style="margin-top:20px; color: var(--primary);">INVITE FRIENDS</h2>
-        <div class="info-card" id="ref-link">Loading...</div>
-        <button class="btn" onclick="copyRef()">COPY LINK</button>
+        <i data-lucide="users" style="width: 60px; height: 60px; color: var(--primary); margin-top: 20px;"></i>
+        <h2 style="color: var(--primary);">INVITE FRIENDS</h2>
+        <p>Earn 5,000 $SHARK for every friend!</p>
+        <div class="invite-stat">Total Friends: <span id="friend-count">0</span></div>
+        <div class="info-card" id="ref-link" style="font-size: 11px; word-break: break-all;">Loading...</div>
+        <button class="btn" onclick="copyRef()"><i data-lucide="copy"></i> COPY LINK</button>
+        
+        <div class="friend-list">
+            <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">YOUR FRIENDS</h4>
+            <div id="friends-container">
+                <p style="text-align:center; color:#555;">No friends invited yet.</p>
+            </div>
+        </div>
     </div>
 
     <div id="wallet" class="screen">
-        <i data-lucide="wallet" style="width: 80px; height: 80px; color: var(--primary); margin-top: 30px;"></i>
-        <h2 style="margin-top:10px;">WALLET</h2>
+        <i data-lucide="wallet" style="width: 60px; height: 60px; color: var(--primary); margin-top: 20px;"></i>
+        <h2>WALLET</h2>
         <div class="info-card">
-            <p>Total Balance</p>
-            <h1 id="wallet-bal">0</h1>
+            <p style="margin:0;">Total Balance</p>
+            <h1 id="wallet-bal" style="margin:10px 0;">0</h1>
         </div>
-
         <div class="info-card">
             <h4 style="margin:0;">TON BLOCKCHAIN</h4>
             <div id="ton-connect-btn"></div>
-            <p id="conn-status" style="font-size: 12px; color: #888; margin-top: 10px;">Connect your Tonkeeper wallet</p>
-            <div id="wallet-addr-display" class="address-box"></div>
+            <p id="conn-status" style="font-size: 12px; color: #888; margin:0;">Connect your Tonkeeper wallet</p>
         </div>
-        
         <button class="btn" style="background:#222; color:#555;" disabled>WITHDRAW (LOCKED)</button>
     </div>
 
     <div id="nav-bar">
-        <div class="nav-item active" onclick="showScreen('home', this)">
-            <i data-lucide="home"></i>
-            <div class="nav-label">Home</div>
-        </div>
-        <div class="nav-item" onclick="showScreen('invite', this)">
-            <i data-lucide="share-2"></i>
-            <div class="nav-label">Invite</div>
-        </div>
-        <div class="nav-item" onclick="showScreen('wallet', this)">
-            <i data-lucide="wallet"></i>
-            <div class="nav-label">Wallet</div>
-        </div>
+        <div class="nav-item active" onclick="showScreen('home', this)"><i data-lucide="home"></i><div class="nav-label">Home</div></div>
+        <div class="nav-item" onclick="showScreen('invite', this)"><i data-lucide="share-2"></i><div class="nav-label">Invite</div></div>
+        <div class="nav-item" onclick="showScreen('wallet', this)"><i data-lucide="wallet"></i><div class="nav-label">Wallet</div></div>
     </div>
 
     <script>
-        // Initialize Icons
+        // আইকনগুলো সচল করার জন্য
         lucide.createIcons();
 
-        // Firebase Setup
+        // Firebase Config (আগেরটাই রাখা হয়েছে)
         const firebaseConfig = {
             apiKey: "AIzaSyA-2VRyhIktuWhesvHRa2lkq-G-PRWBQ8S5RP",
             databaseURL: "https://royaldiamondbot-default-rtdb.firebaseio.com",
@@ -129,42 +133,61 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         const tg = window.Telegram.WebApp;
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
-        let balance = 0;
+        const firstName = tg.initDataUnsafe?.user?.first_name || "Shark User";
+        const startParam = tg.initDataUnsafe?.start_param;
 
-        // TON Connect UI
+        // TON Connect
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://raw.githubusercontent.com/ton-connect/demo-dapp-with-react/master/public/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-btn'
         });
 
-        tonConnectUI.onStatusChange(wallet => {
-            if (wallet) {
-                const address = wallet.account.address;
-                db.ref('users/' + userId).update({ wallet: address });
-                document.getElementById('conn-status').innerText = "✅ Connected Successfully";
-                document.getElementById('wallet-addr-display').innerText = address;
-                document.getElementById('wallet-addr-display').style.display = "block";
-            } else {
-                document.getElementById('conn-status').innerText = "Not Connected";
-                document.getElementById('wallet-addr-display').style.display = "none";
-            }
-        });
+        function initUser() {
+            db.ref('users/' + userId).once('value', (snap) => {
+                if(!snap.exists()) {
+                    db.ref('users/' + userId).set({ name: firstName, balance: 1000, friends: 0 });
+                    if (startParam && startParam !== userId) {
+                        db.ref('users/' + startParam).once('value', (s) => {
+                            if(s.exists()){
+                                db.ref('users/' + startParam).update({ 
+                                    balance: (s.val().balance || 0) + 5000, 
+                                    friends: (s.val().friends || 0) + 1 
+                                });
+                                db.ref('users/' + startParam + '/friend_list').push({ name: firstName });
+                            }
+                        });
+                    }
+                }
+                loadData();
+            });
+        }
 
         function loadData() {
             db.ref('users/' + userId).on('value', (snap) => {
                 const data = snap.val();
-                if(data) { balance = data.balance || 0; updateUI(); }
-                else { db.ref('users/' + userId).set({ name: tg.initDataUnsafe?.user?.first_name || "Shark", balance: 5000 }); }
+                if(data) {
+                    document.getElementById('main-bal').innerText = (data.balance || 0).toLocaleString();
+                    document.getElementById('wallet-bal').innerText = (data.balance || 0).toLocaleString() + " $SHARK";
+                    document.getElementById('friend-count').innerText = data.friends || 0;
+                }
             });
-            document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
-        }
 
-        function updateUI() {
-            document.getElementById('main-bal').innerText = balance.toLocaleString();
-            document.getElementById('wallet-bal').innerText = balance.toLocaleString() + " $SHARK";
+            db.ref('users/' + userId + '/friend_list').on('value', (snap) => {
+                const container = document.getElementById('friends-container');
+                container.innerHTML = "";
+                if(snap.exists()) {
+                    snap.forEach((child) => {
+                        const friend = child.val();
+                        container.innerHTML += `<div class="friend-item"><b>${friend.name}</b><span style="color:var(--primary);">+5,000</span></div>`;
+                    });
+                } else {
+                    container.innerHTML = `<p style="text-align:center; color:#555;">No friends invited yet.</p>`;
+                }
+            });
+
+            document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
         }
 
         function watchAdToClaim() {
@@ -176,10 +199,10 @@
                 sec--; document.getElementById('timer').innerText = sec;
                 if(sec <= 0) {
                     clearInterval(run); overlay.style.display = 'none';
-                    balance += 500; db.ref('users/' + userId).update({ balance: balance });
-                    tg.HapticFeedback.notificationOccurred('success');
-                    alert("500 $SHARK Bonus Added!");
-                    document.getElementById('timer').innerText = 15;
+                    db.ref('users/' + userId).once('value', s => {
+                        db.ref('users/' + userId).update({ balance: (s.val().balance || 0) + 500 });
+                        alert("500 $SHARK Bonus Added!");
+                    });
                 }
             }, 1000);
         }
@@ -189,12 +212,13 @@
             db.ref(`users/${userId}/tasks/${taskId}`).once('value', (snap) => {
                 if(!snap.exists()) {
                     setTimeout(() => {
-                        balance += reward;
-                        db.ref('users/' + userId).update({ balance: balance });
-                        db.ref(`users/${userId}/tasks/${taskId}`).set(true);
-                        alert("Task Reward Added!");
-                    }, 4000);
-                } else { alert("Task already done!"); }
+                        db.ref('users/' + userId).once('value', s => {
+                            db.ref('users/' + userId).update({ balance: (s.val().balance || 0) + reward });
+                            db.ref(`users/${userId}/tasks/${taskId}`).set(true);
+                            alert("Task Reward Added!");
+                        });
+                    }, 5000);
+                }
             });
         }
 
@@ -203,15 +227,16 @@
             document.getElementById(id).classList.add('active-screen');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
+            lucide.createIcons(); // আইকন লোড করার জন্য
         }
 
         function copyRef() {
             navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
-            alert("Copied!");
+            alert("Referral Link Copied!");
         }
 
-        loadData();
+        initUser();
     </script>
 </body>
-    </html>
+</html>
 
