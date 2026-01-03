@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SHARK TOKEN - Official TON Edition</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #00b4d8; --secondary: #0077b6; --bg: #000814;
+            --card: rgba(0, 119, 182, 0.1); --text: #caf0f8; --ton: #0088cc;
+        }
+
+        body { margin: 0; background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .screen { display: none; padding: 20px; height: 85vh; overflow-y: auto; text-align: center; }
+        .active-screen { display: block; }
+
+        .shark-logo { font-size: 80px; margin: 30px 0 10px; filter: drop-shadow(0 0 15px var(--primary)); }
+        .balance-val { font-size: 55px; font-weight: 900; color: var(--text); margin-bottom: 30px; }
+
+        .info-card { background: var(--card); border: 1px solid var(--secondary); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+
+        /*   */
+        .task-list { margin-top: 30px; text-align: left; }
+        .task-item {
+            background: rgba(255,255,255,0.05); border-radius: 15px;
+            padding: 15px; display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 12px; border: 1px solid rgba(0, 180, 216, 0.1);
+        }
+        .task-btn { background: var(--primary); color: #000; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        /* TON Connect Button Container */
+        #ton-connect-btn { display: flex; justify-content: center; margin: 15px 0; }
+        .address-box { font-size: 11px; color: var(--primary); word-break: break-all; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; display: none; }
+
+        /*    */
+        #nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #001219; border-top: 1px solid var(--secondary); display: flex; justify-content: space-around; align-items: center; }
+        .nav-item { color: #555; text-align: center; cursor: pointer; flex: 1; }
+        .nav-item.active { color: var(--primary); }
+        .nav-label { font-size: 11px; font-weight: bold; margin-top: 5px; }
+
+        .btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; padding: 18px; color: white; border-radius: 15px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; }
+        
+        #ad-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div id="ad-overlay">
+        <h2 style="color: var(--primary);">WATCHING AD...</h2>
+        <div id="timer" style="font-size: 60px; font-weight: 800; margin: 20px;">15</div>
+        <p>Wait to claim 500 $SHARK</p>
+    </div>
+
+    <div id="home" class="screen active-screen">
+        <div class="shark-logo"></div>
+        <div class="balance-val" id="main-bal">0</div>
+        
+        <button class="btn" onclick="watchAdToClaim()"> DAILY BONUS (500 $SHARK)</button>
+
+        <div class="task-list">
+            <h4 style="color: var(--primary); margin-left: 5px;">EARN MORE</h4>
+            <div class="task-item">
+                <div class="task-info"><b>Join Channel</b><br><small>+10,000 $SHARK</small></div>
+                <button class="task-btn" onclick="completeTask('tg_task', 10000, 'https://t.me/your_channel')">JOIN</button>
+            </div>
+            <div class="task-item">
+                <div class="task-info"><b>Subscribe YouTube</b><br><small>+15,000 $SHARK</small></div>
+                <button class="task-btn" onclick="completeTask('yt_task', 15000, 'https://youtube.com/@your_channel')">SUB</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="invite" class="screen">
+        <h2 style="margin-top:40px; color: var(--primary);">INVITE FRIENDS</h2>
+        <div class="info-card" id="ref-link">Loading...</div>
+        <button class="btn" onclick="copyRef()">COPY LINK</button>
+    </div>
+
+    <div id="wallet" class="screen">
+        <h2 style="margin-top:30px;">WALLET</h2>
+        <div class="info-card">
+            <p>Total Balance</p>
+            <h1 id="wallet-bal">0</h1>
+        </div>
+
+        <div class="info-card">
+            <h4 style="margin:0;">TON BLOCKCHAIN</h4>
+            <div id="ton-connect-btn"></div>
+            <p id="conn-status" style="font-size: 12px; color: #888; margin-top: 10px;">Connect your Tonkeeper wallet</p>
+            <div id="wallet-addr-display" class="address-box"></div>
+        </div>
+        
+        <button class="btn" style="background:#222; color:#555;" disabled>WITHDRAW (LOCKED)</button>
+    </div>
+
+    <div id="nav-bar">
+        <div class="nav-item active" onclick="showScreen('home', this)"><span></span><div class="nav-label">Home</div></div>
+        <div class="nav-item" onclick="showScreen('invite', this)"><span></span><div class="nav-label">Invite</div></div>
+        <div class="nav-item" onclick="showScreen('wallet', this)"><span></span><div class="nav-label">Wallet</div></div>
+    </div>
+
+    <script>
+        // Firebase Setup
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-2VRyhIktuWhesvHRa2lkq-G-PRWBQ8S5RP",
+            databaseURL: "https://royaldiamondbot-default-rtdb.firebaseio.com",
+            projectId: "royaldiamondbot",
+            appId: "1:156914195366:web:e5ab56df62ecbf90550d67"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const tg = window.Telegram.WebApp;
+        const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
+        let balance = 0;
+
+        // TON Connect UI Initialization
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://raw.githubusercontent.com/ton-connect/demo-dapp-with-react/master/public/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-btn'
+        });
+
+        //   
+        tonConnectUI.onStatusChange(wallet => {
+            if (wallet) {
+                const address = wallet.account.address;
+                db.ref('users/' + userId).update({ wallet: address });
+                document.getElementById('conn-status').innerText = " Connected Successfully";
+                document.getElementById('wallet-addr-display').innerText = address;
+                document.getElementById('wallet-addr-display').style.display = "block";
+            } else {
+                document.getElementById('conn-status').innerText = "Not Connected";
+                document.getElementById('wallet-addr-display').style.display = "none";
+            }
+        });
+
+        function loadData() {
+            db.ref('users/' + userId).on('value', (snap) => {
+                const data = snap.val();
+                if(data) { balance = data.balance || 0; updateUI(); }
+                else { db.ref('users/' + userId).set({ name: tg.initDataUnsafe?.user?.first_name || "Shark", balance: 5000 }); }
+            });
+            document.getElementById('ref-link').innerText = `https://t.me/YourBot/start?startapp=${userId}`;
+        }
+
+        function updateUI() {
+            document.getElementById('main-bal').innerText = balance.toLocaleString();
+            document.getElementById('wallet-bal').innerText = balance.toLocaleString() + " $SHARK";
+        }
+
+        function watchAdToClaim() {
+            window.open("https://www.effectivegatecpm.com/rarb5qds06?key=79349eb6a9357e2e416a3ef19425a5c1", '_blank');
+            const overlay = document.getElementById('ad-overlay');
+            overlay.style.display = 'flex';
+            let sec = 15;
+            const run = setInterval(() => {
+                sec--; document.getElementById('timer').innerText = sec;
+                if(sec <= 0) {
+                    clearInterval(run); overlay.style.display = 'none';
+                    balance += 500; db.ref('users/' + userId).update({ balance: balance });
+                    tg.HapticFeedback.notificationOccurred('success');
+                    alert("500 $SHARK Bonus Added!");
+                }
+            }, 1000);
+        }
+
+        function completeTask(taskId, reward, link) {
+            window.open(link, '_blank');
+            db.ref(`users/${userId}/tasks/${taskId}`).once('value', (snap) => {
+                if(!snap.exists()) {
+                    setTimeout(() => {
+                        balance += reward;
+                        db.ref('users/' + userId).update({ balance: balance });
+                        db.ref(`users/${userId}/tasks/${taskId}`).set(true);
+                        alert("Task Reward Added!");
+                    }, 4000);
+                } else { alert("Task already done!"); }
+            });
+        }
+
+        function showScreen(id, el) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function copyRef() {
+            navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
+            alert("Copied!");
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
