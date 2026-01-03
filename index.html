@@ -49,6 +49,7 @@
         .nav-label { font-size: 11px; font-weight: bold; margin-top: 5px; }
 
         .btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; padding: 18px; color: white; border-radius: 15px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn:disabled { background: #222; color: #555; opacity: 0.6; }
         .task-btn { background: var(--primary); border: none; padding: 8px 15px; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; }
         
         #ad-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
@@ -59,16 +60,17 @@
 
     <div id="ad-overlay">
         <h2 style="color: var(--primary);">LOADING AD...</h2>
-        <p>Wait to claim 500 $SHARK</p>
+        <p>Finish watching to claim 500 $SHARK</p>
     </div>
 
     <div id="home" class="screen active-screen">
         <div class="shark-logo">🦈</div>
         <div class="balance-val" id="main-bal">0</div>
         
-        <button class="btn" onclick="watchAdToClaim()">
+        <button id="bonus-btn" class="btn" onclick="watchAdToClaim()">
             <i data-lucide="gift"></i> DAILY BONUS (500 $SHARK)
         </button>
+        <p id="cooldown-text" style="color: var(--primary); font-size: 12px; margin-top: 5px;"></p>
 
         <div class="task-list">
             <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">EARN MORE</h4>
@@ -109,7 +111,7 @@
         <div class="info-card">
             <h4 style="margin:0;">TON BLOCKCHAIN</h4>
             <div id="ton-connect-btn"></div>
-            <p id="conn-status" style="font-size: 12px; color: #888; margin:0;">Connect your Tonkeeper wallet</p>
+            <p id="conn-status" style="font-size: 12px; color: #888; margin:0;">Connect your wallet to enable withdrawal</p>
         </div>
         <button class="btn" style="background:#222; color:#555;" disabled>WITHDRAW (LOCKED)</button>
     </div>
@@ -123,56 +125,36 @@
     <script>
         lucide.createIcons();
 
+        // TON Connect Setup
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://khanemon013111-wq.github.io/MegalodonSharkbot/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-btn'
+        });
+
+        // Firebase Setup
         const firebaseConfig = {
             apiKey: "AIzaSyDJzyYMY4Iy@shwXkPz7c5ppWr75Wn9ngY",
             authDomain: "shark-bot-c515b.firebaseapp.com",
             projectId: "shark-bot-c515b",
-            storageBucket: "shark-bot-c515b.firebasestorage.app",
-            messagingSenderId: "761875988504",
-            appId: "1:761875988504:web:f53a58bc053e4846b6036d",
             databaseURL: "https://shark-bot-c515b-default-rtdb.firebaseio.com"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const tg = window.Telegram.WebApp;
-        tg.expand();
-
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
-        const firstName = tg.initDataUnsafe?.user?.first_name || "Shark User";
-        const startParam = tg.initDataUnsafe?.start_param;
 
+        // Initialize User
         function initUser() {
             if (userId === "guest") return;
             db.ref('users/' + userId).once('value', (snap) => {
                 if(!snap.exists()) {
-                    db.ref('users/' + userId).set({ 
-                        name: firstName, 
-                        balance: 1000, 
-                        friends: 0 
-                    }).then(() => {
-                        if (startParam && startParam !== userId) {
-                            processReferral(startParam);
-                        }
-                    });
+                    db.ref('users/' + userId).set({ balance: 1000, friends: 0 });
                 }
                 loadData();
             });
         }
 
-        function processReferral(inviterId) {
-            db.ref('users/' + inviterId).once('value', (snap) => {
-                if(snap.exists()){
-                    const data = snap.val();
-                    db.ref('users/' + inviterId).update({
-                        balance: (data.balance || 0) + 5000,
-                        friends: (data.friends || 0) + 1
-                    });
-                    db.ref('users/' + inviterId + '/friend_list').push({ name: firstName });
-                }
-            });
-        }
-
+        // Load Real-time Data
         function loadData() {
             db.ref('users/' + userId).on('value', (snap) => {
                 const data = snap.val();
@@ -180,39 +162,49 @@
                     document.getElementById('main-bal').innerText = (data.balance || 0).toLocaleString();
                     document.getElementById('wallet-bal').innerText = (data.balance || 0).toLocaleString() + " $SHARK";
                     document.getElementById('friend-count').innerText = data.friends || 0;
+                    checkBonusTimer(data.lastBonus);
                 }
             });
-
-            db.ref('users/' + userId + '/friend_list').on('value', (snap) => {
-                const container = document.getElementById('friends-container');
-                container.innerHTML = "";
-                if(snap.exists()) {
-                    snap.forEach((child) => {
-                        const friend = child.val();
-                        container.innerHTML += `<div class="friend-item"><b>${friend.name}</b><span style="color:var(--primary);">+5,000</span></div>`;
-                    });
-                } else {
-                    container.innerHTML = `<p style="text-align:center; color:#555;">No friends invited yet.</p>`;
-                }
-            });
-
             document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
         }
 
-        // নতুন অ্যাড ফাংশন - যা আপনার বটের ব্যালেন্স আপডেট করবে
+        // --- ২৪ ঘণ্টা বোনাস সিস্টেম ---
+        function checkBonusTimer(lastBonus) {
+            const btn = document.getElementById('bonus-btn');
+            const cooldownText = document.getElementById('cooldown-text');
+            if (!lastBonus) return;
+
+            const now = Date.now();
+            const dayInMs = 24 * 60 * 60 * 1000;
+            const timeLeft = dayInMs - (now - lastBonus);
+
+            if (timeLeft > 0) {
+                btn.disabled = true;
+                const h = Math.floor(timeLeft / 3600000);
+                const m = Math.floor((timeLeft % 3600000) / 60000);
+                cooldownText.innerText = `Available in ${h}h ${m}m`;
+            } else {
+                btn.disabled = false;
+                cooldownText.innerText = "";
+            }
+        }
+
+        // --- মনিটেগ রিওয়ার্ডেড বিজ্ঞাপন ---
         function watchAdToClaim() {
             const overlay = document.getElementById('ad-overlay');
             overlay.style.display = 'flex';
 
-            // Monetag Rewarded Ad Call
             show_10414428().then(() => {
                 overlay.style.display = 'none';
                 db.ref('users/' + userId).once('value', s => {
-                    let currentBal = (s.val() && s.val().balance) ? s.val().balance : 0;
-                    db.ref('users/' + userId).update({ balance: currentBal + 500 });
-                    alert("Reward Claimed: 500 $SHARK!");
+                    const current = s.val().balance || 0;
+                    db.ref('users/' + userId).update({ 
+                        balance: current + 500,
+                        lastBonus: Date.now() 
+                    });
+                    alert("Success! 500 $SHARK bonus added.");
                 });
-            }).catch((e) => {
+            }).catch(() => {
                 overlay.style.display = 'none';
                 alert("Ad not ready yet. Please try again later.");
             });
@@ -249,5 +241,5 @@
         initUser();
     </script>
 </body>
-    </html>
+</html>
 
