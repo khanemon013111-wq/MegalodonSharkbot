@@ -12,7 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@2.0.2/dist/tonconnect-ui.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -113,7 +113,7 @@
             <div id="ton-connect-btn"></div>
             <p id="conn-status" style="font-size: 12px; color: #888; margin:0;">Connect your wallet to enable withdrawal</p>
         </div>
-        <button class="btn" style="background:#222; color:#555;" disabled>WITHDRAW (LOCKED)</button>
+        <button id="withdraw-btn" class="btn" style="background:#222; color:#555;" disabled>WITHDRAW (LOCKED)</button>
     </div>
 
     <div id="nav-bar">
@@ -125,15 +125,9 @@
     <script>
         lucide.createIcons();
 
-        // TON Connect Setup
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://khanemon013111-wq.github.io/MegalodonSharkbot/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect-btn'
-        });
-
-        // Firebase Setup
+        // ১. Firebase Setup (API Key Corrected)
         const firebaseConfig = {
-            apiKey: "AIzaSyDJzyYMY4Iy@shwXkPz7c5ppWr75Wn9ngY",
+            apiKey: "AIzaSyDJzyYMY4Iy-shwXkPz7c5ppWr75Wn9ngY",
             authDomain: "shark-bot-c515b.firebaseapp.com",
             projectId: "shark-bot-c515b",
             databaseURL: "https://shark-bot-c515b-default-rtdb.firebaseio.com"
@@ -142,6 +136,30 @@
         const db = firebase.database();
         const tg = window.Telegram.WebApp;
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
+
+        // ২. TON Connect Setup (Initialized after DOM load)
+        let tonConnectUI;
+        document.addEventListener('DOMContentLoaded', () => {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: 'https://khanemon013111-wq.github.io/MegalodonSharkbot/tonconnect-manifest.json',
+                buttonRootId: 'ton-connect-btn'
+            });
+
+            // Handle Wallet Connection Status
+            tonConnectUI.onStatusChange(wallet => {
+                const statusText = document.getElementById('conn-status');
+                if (wallet) {
+                    const address = wallet.account.address;
+                    statusText.innerText = "Connected: " + address.substring(0, 4) + "..." + address.substring(address.length - 4);
+                    statusText.style.color = "#00b4d8";
+                } else {
+                    statusText.innerText = "Connect your wallet to enable withdrawal";
+                    statusText.style.color = "#888";
+                }
+            });
+            
+            initUser();
+        });
 
         // Initialize User
         function initUser() {
@@ -168,7 +186,7 @@
             document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
         }
 
-        // --- ২৪ ঘণ্টা বোনাস সিস্টেম ---
+        // ২৪ ঘণ্টা বোনাস সিস্টেম
         function checkBonusTimer(lastBonus) {
             const btn = document.getElementById('bonus-btn');
             const cooldownText = document.getElementById('cooldown-text');
@@ -189,7 +207,7 @@
             }
         }
 
-        // --- মনিটেগ রিওয়ার্ডেড বিজ্ঞাপন ---
+        // মনিটেগ রিওয়ার্ডেড বিজ্ঞাপন
         function watchAdToClaim() {
             const overlay = document.getElementById('ad-overlay');
             overlay.style.display = 'flex';
@@ -237,9 +255,7 @@
             navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
             alert("Referral Link Copied!");
         }
-
-        initUser();
     </script>
 </body>
-</html>
+    </html>
 
