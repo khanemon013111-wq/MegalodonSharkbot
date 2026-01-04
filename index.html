@@ -140,11 +140,12 @@
         function initUser() {
             if (userId === "guest") return;
             const urlParams = new URLSearchParams(window.location.search);
-            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('startapp');
+            // টেলিগ্রামের সব পদ্ধতি ব্যবহার করে রেফারাল আইডি সংগ্রহ করা
+            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('startapp') || urlParams.get('tgWebAppStartParam');
 
             db.ref('users/' + userId).once('value', (snap) => {
                 if(!snap.exists()) {
-                    // ১. আগে ইনভাইটারকে (আপনাকে) বোনাস দেওয়ার চেষ্টা করা
+                    // ১. ইনভাইটারকে (আপনাকে) ৫০০০ কয়েন বোনাস দেওয়া
                     if(startParam && startParam !== userId) {
                         db.ref('users/' + startParam).once('value', (refSnap) => {
                             if(refSnap.exists()) {
@@ -153,7 +154,7 @@
                                     balance: (currentRefData.balance || 0) + 5000,
                                     friends: (currentRefData.friends || 0) + 1
                                 });
-                                // ফ্রেন্ড লিস্টে রেকর্ড রাখা
+                                // আপনার ইনভাইট লিস্টে ইউজারের তথ্য রাখা
                                 db.ref('friends_list/' + startParam + '/' + userId).set({
                                     time: Date.now()
                                 });
@@ -161,7 +162,7 @@
                         });
                     }
 
-                    // ২. এবার নতুন ইউজারের একাউন্ট তৈরি করা
+                    // ২. নতুন ইউজারের একাউন্ট (১০০০ কয়েন) তৈরি করা
                     db.ref('users/' + userId).set({ 
                         balance: 1000, 
                         friends: 0, 
@@ -184,8 +185,8 @@
                     document.getElementById('display-userid').innerText = "ID: " + userId;
                 }
             });
-            // লিঙ্কে /start সরিয়ে শুধু মেন বট লিঙ্ক রাখা যা বেশি কার্যকরী
-            document.getElementById('ref-link').innerText = "https://t.me/MegalodonSharkbot?start=" + userId;
+            // সঠিক ইনভাইট লিঙ্ক যা ছবি ৫ অনুযায়ী আপনার Mini App কে কল করবে
+            document.getElementById('ref-link').innerText = "https://t.me/MegalodonSharkbot/shark?startapp=" + userId;
         }
 
         function loadFriendsList() {
@@ -248,4 +249,4 @@
     </script>
 </body>
     </html>
-    
+
