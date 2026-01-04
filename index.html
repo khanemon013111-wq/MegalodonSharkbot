@@ -26,7 +26,8 @@
         .active-screen { display: block; }
 
         .shark-logo { font-size: 80px; margin: 30px 0 10px; filter: drop-shadow(0 0 15px var(--primary)); display: block; }
-        .balance-val { font-size: 55px; font-weight: 900; color: var(--text); margin-bottom: 30px; }
+        .balance-val { font-size: 55px; font-weight: 900; color: var(--text); margin-bottom: 5px; }
+        .user-id-tag { color: var(--primary); font-size: 14px; margin-bottom: 25px; opacity: 0.8; }
 
         .info-card { 
             background: var(--card); border: 1px solid var(--secondary); border-radius: 20px; 
@@ -66,6 +67,7 @@
     <div id="home" class="screen active-screen">
         <div class="shark-logo">🦈</div>
         <div class="balance-val" id="main-bal">0</div>
+        <div class="user-id-tag" id="display-userid">ID: Loading...</div>
         
         <button id="bonus-btn" class="btn" onclick="watchAdToClaim()">
             <i data-lucide="gift"></i> DAILY BONUS (500 $SHARK)
@@ -78,7 +80,7 @@
                 <div><b>Join Community</b><br><small>+10,000 $SHARK</small></div>
                 <button class="task-btn" onclick="completeTask('tg_task', 10000, 'https://t.me/MegalodonSharkCommunity')">JOIN</button>
             </div>
-            </div>
+        </div>
     </div>
 
     <div id="invite" class="screen">
@@ -130,6 +132,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const tg = window.Telegram.WebApp;
+        tg.expand();
+
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
 
         let tonConnectUI;
@@ -153,13 +157,32 @@
 
         function initUser() {
             if (userId === "guest") return;
+
+            // রেফারেল আইডি চেক করা
+            const urlParams = new URLSearchParams(window.location.search);
+            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('tgWebAppStartParam');
+
             db.ref('users/' + userId).once('value', (snap) => {
                 if(!snap.exists()) {
+                    // নতুন ইউজার ডাটাবেজে সেভ করা
                     db.ref('users/' + userId).set({ 
                         balance: 1000, 
                         friends: 0,
                         createdAt: Date.now()
                     });
+
+                    // যদি কেউ রেফারেল লিংকে জয়েন করে
+                    if(startParam && startParam !== userId) {
+                        db.ref('users/' + startParam).once('value', (refSnap) => {
+                            if(refSnap.exists()) {
+                                const refData = refSnap.val();
+                                db.ref('users/' + startParam).update({
+                                    balance: (refData.balance || 0) + 5000,
+                                    friends: (refData.friends || 0) + 1
+                                });
+                            }
+                        });
+                    }
                 }
                 loadData();
             });
@@ -172,9 +195,11 @@
                     document.getElementById('main-bal').innerText = (data.balance || 0).toLocaleString();
                     document.getElementById('wallet-bal').innerText = (data.balance || 0).toLocaleString() + " $SHARK";
                     document.getElementById('friend-count').innerText = data.friends || 0;
+                    document.getElementById('display-userid').innerText = "ID: " + userId;
                     checkBonusTimer(data.lastBonus);
                 }
             });
+            // সঠিক রেফারেল লিংক জেনারেট করা
             document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
         }
 
@@ -199,17 +224,24 @@
         function watchAdToClaim() {
             const overlay = document.getElementById('ad-overlay');
             overlay.style.display = 'flex';
-            show_10414428().then(() => {
-                overlay.style.display = 'none';
-                db.ref('users/' + userId).once('value', s => {
-                    const current = s.val().balance || 0;
-                    db.ref('users/' + userId).update({ balance: current + 500, lastBonus: Date.now() });
-                    alert("Success! 500 $SHARK bonus added.");
+            
+            // Monetag Ad Call
+            if (typeof show_10414428 === 'function') {
+                show_10414428().then(() => {
+                    overlay.style.display = 'none';
+                    db.ref('users/' + userId).once('value', s => {
+                        const current = s.val().balance || 0;
+                        db.ref('users/' + userId).update({ balance: current + 500, lastBonus: Date.now() });
+                        alert("Success! 500 $SHARK bonus added.");
+                    });
+                }).catch(() => {
+                    overlay.style.display = 'none';
+                    alert("Ad failed to load.");
                 });
-            }).catch(() => {
+            } else {
                 overlay.style.display = 'none';
-                alert("Ad not ready yet.");
-            });
+                alert("Ads are not ready.");
+            }
         }
 
         function completeTask(taskId, reward, link) {
@@ -236,8 +268,10 @@
         }
 
         function copyRef() {
-            navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
-            alert("Referral Link Copied!");
+            const link = document.getElementById('ref-link').innerText;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Referral Link Copied!");
+            });
         }
     </script>
 </body>
