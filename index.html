@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="monetag" content="d686104263ea095e5938f6f704b745b3">
-    
     <script src='//libtl.com/sdk.js' data-zone='10414428' data-sdk='show_10414428'></script>
-    
-    <title>SHARK TOKEN - Official TON Edition</title>
-    
+    <title>SHARK TOKEN - Official Edition</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -16,103 +13,93 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Space+Grotesk:wght@300;500;700&display=swap');
+
         :root {
-            --primary: #00b4d8; --secondary: #0077b6; --bg: #000814;
-            --card: rgba(0, 119, 182, 0.1); --text: #caf0f8;
+            --neon-blue: #00d4ff; --neon-purple: #9d00ff; --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08); --gray-text: #4e5d78;
         }
 
-        body { margin: 0; background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .screen { display: none; padding: 20px; height: 85vh; overflow-y: auto; text-align: center; }
-        .active-screen { display: block; }
-
-        .shark-logo { font-size: 80px; margin: 30px 0 10px; filter: drop-shadow(0 0 15px var(--primary)); display: block; }
-        .balance-val { font-size: 55px; font-weight: 900; color: var(--text); margin-bottom: 5px; }
-        .user-id-tag { color: var(--primary); font-size: 14px; margin-bottom: 25px; opacity: 0.8; }
-
-        .info-card { 
-            background: var(--card); border: 1px solid var(--secondary); border-radius: 20px; 
-            padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; text-align: center;
+        body {
+            margin: 0; background: radial-gradient(circle at top right, #0a192f, #020b18);
+            color: #e0f2f1; font-family: 'Space Grotesk', sans-serif; overflow: hidden; height: 100vh;
         }
 
-        .task-list, .friend-list { margin-top: 20px; text-align: left; width: 100%; }
-        .task-item, .friend-item {
-            background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 12px; border: 1px solid rgba(0, 180, 216, 0.1);
+        .screen { display: none; padding: 25px 20px; height: 82vh; overflow-y: auto; text-align: center; }
+        .active-screen { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .shark-logo { font-size: 70px; filter: drop-shadow(0 0 15px var(--neon-blue)); animation: float 3s ease-in-out infinite; margin-top: 10px;}
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .balance-val { font-family: 'Rajdhani', sans-serif; font-size: 50px; font-weight: 700; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3); margin: 5px 0; }
+        .id-badge { background: var(--glass); border: 1px solid var(--glass-border); padding: 5px 12px; border-radius: 50px; font-size: 11px; color: #8892b0; margin-bottom: 25px; display: inline-block; }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none; padding: 15px; color: white; border-radius: 12px;
+            width: 100%; font-weight: 700; font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;
+        }
+        .btn-main:disabled { background: #1a222c; color: var(--gray-text); cursor: not-allowed; opacity: 0.7; }
+
+        .task-item {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+            border-radius: 15px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
         }
 
-        #nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #001219; border-top: 1px solid var(--secondary); display: flex; justify-content: space-around; align-items: center; }
-        .nav-item { color: #555; text-align: center; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center;}
-        .nav-item.active { color: var(--primary); }
-        .nav-label { font-size: 11px; font-weight: bold; margin-top: 5px; }
+        .task-btn { background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 11px; cursor: pointer; transition: 0.3s; }
+        .task-btn:disabled { border-color: var(--gray-text); color: var(--gray-text); opacity: 0.5; cursor: not-allowed; }
 
-        .btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; padding: 18px; color: white; border-radius: 15px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn:disabled { background: #222; color: #555; opacity: 0.6; }
-        .task-btn { background: var(--primary); border: none; padding: 8px 15px; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; }
-        
-        #ad-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+        #nav-bar {
+            position: fixed; bottom: 0; width: 100%; height: 75px;
+            background: rgba(2, 11, 24, 0.9); backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; align-items: center;
+        }
+        .nav-item { color: #4e5d78; transition: 0.3s; display: flex; flex-direction: column; align-items: center; flex: 1; cursor: pointer;}
+        .nav-item.active { color: var(--neon-blue); }
+        .nav-label { font-size: 10px; font-weight: 700; margin-top: 5px; text-transform: uppercase; }
+
+        .wallet-card { background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(157, 0, 255, 0.05)); border-radius: 25px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body>
 
-    <div id="ad-overlay">
-        <h2 style="color: var(--primary);">LOADING AD...</h2>
-        <p>Finish watching to claim 500 $SHARK</p>
-    </div>
-
     <div id="home" class="screen active-screen">
         <div class="shark-logo">🦈</div>
+        <div style="font-size: 11px; letter-spacing: 2px; color: var(--neon-blue);">SHARK BALANCE</div>
         <div class="balance-val" id="main-bal">0</div>
-        <div class="user-id-tag" id="display-userid">ID: Loading...</div>
+        <div class="id-badge" id="display-id">ID: Loading...</div>
         
-        <button id="bonus-btn" class="btn" onclick="watchAdToClaim()">
-            <i data-lucide="gift"></i> DAILY BONUS (500 $SHARK)
+        <button id="bonus-btn" class="btn-main" onclick="watchAdToClaim()">
+            <i data-lucide="sparkles"></i> <span id="reward-text">DAILY REWARD (+500)</span>
         </button>
-        <p id="cooldown-text" style="color: var(--primary); font-size: 12px; margin-top: 5px;"></p>
-
-        <div class="task-list">
-            <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">EARN MORE</h4>
-            <div class="task-item">
-                <div><b>Join Community</b><br><small>+10,000 $SHARK</small></div>
-                <button class="task-btn" onclick="completeTask('tg_task', 10000, 'https://t.me/MegalodonSharkCommunity')">JOIN</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="invite" class="screen">
-        <i data-lucide="users" style="width: 60px; height: 60px; color: var(--primary); margin-top: 20px;"></i>
-        <h2 style="color: var(--primary);">INVITE FRIENDS</h2>
-        <p>Earn 5,000 $SHARK for every friend!</p>
-        <div class="info-card">Total Friends: <span id="friend-count">0</span></div>
-        <div class="info-card" id="ref-link" style="font-size: 11px; word-break: break-all; color: var(--primary);">Loading...</div>
-        <button class="btn" onclick="copyRef()"><i data-lucide="copy"></i> COPY LINK</button>
         
-        <div class="friend-list">
-            <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">YOUR FRIENDS LIST</h4>
-            <div id="friends-container">
-                <p style="text-align:center; color:#555;">No friends invited yet.</p>
+        <div style="text-align: left; margin-top: 30px;">
+            <p style="font-size: 11px; color: var(--neon-blue); font-weight: 700; margin-left: 5px; letter-spacing: 1px;">MISSIONS</p>
+            <div class="task-item">
+                <div><span style="display:block; font-weight:700;">Join Community</span><span style="font-size:11px; color:#8892b0;">+10,000 $SHARK</span></div>
+                <button id="tg-task-btn" class="task-btn" onclick="completeTask('tg_task', 10000, 'https://t.me/MegalodonSharkCommunity')">JOIN</button>
             </div>
         </div>
     </div>
 
     <div id="wallet" class="screen">
-        <i data-lucide="wallet" style="width: 60px; height: 60px; color: var(--primary); margin-top: 20px;"></i>
-        <h2>WALLET</h2>
-        <div class="info-card">
-            <p style="margin:0;">Total Balance</p>
-            <h1 id="wallet-bal" style="margin:10px 0;">0</h1>
+        <div style="margin-top: 10px; margin-bottom: 20px;"><i data-lucide="wallet" style="width: 35px; height: 35px; color: var(--neon-purple);"></i><h2 style="font-family: 'Rajdhani'; margin: 5px 0;">ASSETS</h2></div>
+        <div class="wallet-card">
+            <p style="font-size: 11px; color: #8892b0; margin: 0;">TOTAL HOLDINGS</p>
+            <h1 id="wallet-bal" style="font-family: 'Rajdhani'; font-size: 45px; margin: 5px 0;">0</h1>
+            <div id="ton-connect-btn" style="display: flex; justify-content: center; margin-top: 15px; transform: scale(0.9);"></div>
         </div>
-        <div class="info-card">
-            <h4 style="margin:0;">TON BLOCKCHAIN</h4>
-            <div id="ton-connect-btn"></div>
-            <p id="conn-status" style="font-size: 12px; color: #888; margin:0;">Connect wallet to withdraw</p>
+        <div class="wallet-card" style="padding: 15px;">
+            <p style="font-size: 12px; font-weight: 700; color: var(--neon-blue);">INVITE FRIENDS</p>
+            <div id="ref-link" style="font-size: 10px; color: #8892b0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; word-break: break-all; margin: 10px 0;">...</div>
+            <button class="btn-main" onclick="copyRef()"><i data-lucide="copy"></i> COPY LINK</button>
         </div>
     </div>
 
     <div id="nav-bar">
-        <div class="nav-item active" onclick="showScreen('home', this)"><i data-lucide="home"></i><div class="nav-label">Home</div></div>
-        <div class="nav-item" onclick="showScreen('invite', this)"><i data-lucide="share-2"></i><div class="nav-label">Invite</div></div>
+        <div class="nav-item active" onclick="showScreen('home', this)"><i data-lucide="home"></i><div class="nav-label">Empire</div></div>
         <div class="nav-item" onclick="showScreen('wallet', this)"><i data-lucide="wallet"></i><div class="nav-label">Wallet</div></div>
     </div>
 
@@ -130,102 +117,86 @@
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
 
         document.addEventListener('DOMContentLoaded', () => {
-            new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: 'https://khanemon013111-wq.github.io/MegalodonSharkbot/tonconnect-manifest.json',
-                buttonRootId: 'ton-connect-btn'
-            });
+            new TON_CONNECT_UI.TonConnectUI({ manifestUrl: 'https://khanemon013111-wq.github.io/MegalodonSharkbot/tonconnect-manifest.json', buttonRootId: 'ton-connect-btn' });
             initUser();
+            setInterval(updateRewardTimer, 1000);
         });
 
         function initUser() {
             if (userId === "guest") return;
-            const urlParams = new URLSearchParams(window.location.search);
-            // টেলিগ্রামের সব পদ্ধতি ব্যবহার করে রেফারাল আইডি সংগ্রহ করা
-            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('startapp') || urlParams.get('tgWebAppStartParam');
-
             db.ref('users/' + userId).once('value', (snap) => {
                 if(!snap.exists()) {
-                    // ১. ইনভাইটারকে (আপনাকে) ৫০০০ কয়েন বোনাস দেওয়া
-                    if(startParam && startParam !== userId) {
-                        db.ref('users/' + startParam).once('value', (refSnap) => {
-                            if(refSnap.exists()) {
-                                const currentRefData = refSnap.val();
-                                db.ref('users/' + startParam).update({
-                                    balance: (currentRefData.balance || 0) + 5000,
-                                    friends: (currentRefData.friends || 0) + 1
-                                });
-                                // আপনার ইনভাইট লিস্টে ইউজারের তথ্য রাখা
-                                db.ref('friends_list/' + startParam + '/' + userId).set({
-                                    time: Date.now()
-                                });
-                            }
-                        });
-                    }
-
-                    // ২. নতুন ইউজারের একাউন্ট (১০০০ কয়েন) তৈরি করা
-                    db.ref('users/' + userId).set({ 
-                        balance: 1000, 
-                        friends: 0, 
-                        createdAt: Date.now(),
-                        referredBy: startParam || "none"
-                    });
+                    db.ref('users/' + userId).set({ balance: 1000, lastRewardTime: 0, tasks: { tg_task: false } });
                 }
                 loadData();
-                loadFriendsList();
             });
         }
 
         function loadData() {
-            db.ref('users/' + userId).on('value', (snap) => {
-                const data = snap.val();
-                if(data) {
-                    document.getElementById('main-bal').innerText = (data.balance || 0).toLocaleString();
-                    document.getElementById('wallet-bal').innerText = (data.balance || 0).toLocaleString();
-                    document.getElementById('friend-count').innerText = data.friends || 0;
-                    document.getElementById('display-userid').innerText = "ID: " + userId;
+            db.ref('users/' + userId).on('value', (s) => {
+                const d = s.val();
+                if(d) {
+                    document.getElementById('main-bal').innerText = (d.balance || 0).toLocaleString();
+                    document.getElementById('wallet-bal').innerText = (d.balance || 0).toLocaleString();
+                    document.getElementById('display-id').innerText = "ID: " + userId;
+                    checkTaskStatus(d.tasks);
                 }
             });
-            // সঠিক ইনভাইট লিঙ্ক যা ছবি ৫ অনুযায়ী আপনার Mini App কে কল করবে
             document.getElementById('ref-link').innerText = "https://t.me/MegalodonSharkbot/shark?startapp=" + userId;
         }
 
-        function loadFriendsList() {
-            const container = document.getElementById('friends-container');
-            db.ref('friends_list/' + userId).on('value', (snap) => {
-                if(snap.exists()) {
-                    container.innerHTML = "";
-                    Object.keys(snap.val()).forEach(friendId => {
-                        container.innerHTML += `<div class="friend-item"><div><b>User: ${friendId}</b><br><small>Joined Successfully</small></div><span style="color:var(--primary)">+5,000 $SHARK</span></div>`;
-                    });
+        function updateRewardTimer() {
+            db.ref('users/' + userId + '/lastRewardTime').once('value', s => {
+                const lastTime = s.val() || 0;
+                const now = Date.now();
+                const diff = (lastTime + (12 * 60 * 60 * 1000)) - now;
+                const btn = document.getElementById('bonus-btn');
+                const text = document.getElementById('reward-text');
+
+                if (diff > 0) {
+                    const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+                    btn.disabled = true;
+                    text.innerText = `${h}h ${m}m ${s}s left`;
                 } else {
-                    container.innerHTML = '<p style="text-align:center; color:#555;">No friends invited yet.</p>';
+                    btn.disabled = false;
+                    text.innerText = "DAILY REWARD (+500)";
                 }
             });
         }
 
         function watchAdToClaim() {
-            const overlay = document.getElementById('ad-overlay');
-            overlay.style.display = 'flex';
             if (typeof show_10414428 === 'function') {
                 show_10414428().then(() => {
-                    overlay.style.display = 'none';
-                    db.ref('users/' + userId).once('value', s => {
-                        db.ref('users/' + userId).update({ balance: (s.val().balance || 0) + 500, lastBonus: Date.now() });
-                        alert("Bonus Added!");
+                    db.ref('users/'+userId).once('value', s => {
+                        db.ref('users/'+userId).update({ 
+                            balance: (s.val().balance + 500), 
+                            lastRewardTime: Date.now() 
+                        });
+                        tg.HapticFeedback.notificationOccurred('success');
                     });
-                }).catch(() => { overlay.style.display = 'none'; });
+                });
             }
         }
 
-        function completeTask(taskId, reward, link) {
-            window.open(link, '_blank');
-            db.ref(`users/${userId}/tasks/${taskId}`).once('value', (snap) => {
-                if(!snap.exists()) {
+        function checkTaskStatus(tasks) {
+            const btn = document.getElementById('tg-task-btn');
+            if (tasks && tasks.tg_task) {
+                btn.innerText = "COMPLETED";
+                btn.disabled = true;
+            }
+        }
+
+        function completeTask(id, r, l) {
+            window.open(l, '_blank');
+            db.ref(`users/${userId}/tasks/${id}`).once('value', s => {
+                if(!s.val()) {
+                    tg.showAlert("Checking... Reward will be added in 5s");
                     setTimeout(() => {
-                        db.ref('users/' + userId).once('value', s => {
-                            db.ref('users/' + userId).update({ balance: (s.val().balance || 0) + reward });
-                            db.ref(`users/${userId}/tasks/${taskId}`).set(true);
-                            alert("Task Reward Added!");
+                        db.ref('users/'+userId).once('value', sv => {
+                            let newBal = (sv.val().balance || 0) + r;
+                            db.ref('users/'+userId).update({ balance: newBal });
+                            db.ref(`users/${userId}/tasks/${id}`).set(true);
+                            tg.HapticFeedback.impactOccurred('medium');
                         });
                     }, 5000);
                 }
@@ -238,15 +209,14 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
             lucide.createIcons();
+            tg.HapticFeedback.selectionChanged();
         }
 
         function copyRef() {
-            const link = document.getElementById('ref-link').innerText;
-            navigator.clipboard.writeText(link).then(() => {
-                alert("Referral Link Copied!");
-            });
+            navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
+            tg.showAlert("Link Copied!");
         }
     </script>
 </body>
     </html>
-
+    
