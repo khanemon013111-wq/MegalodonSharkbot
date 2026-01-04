@@ -42,8 +42,6 @@
             margin-bottom: 12px; border: 1px solid rgba(0, 180, 216, 0.1);
         }
 
-        #ton-connect-btn { display: flex; justify-content: center; align-items: center; margin: 15px auto; width: 100%; }
-
         #nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #001219; border-top: 1px solid var(--secondary); display: flex; justify-content: space-around; align-items: center; }
         .nav-item { color: #555; text-align: center; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center;}
         .nav-item.active { color: var(--primary); }
@@ -54,7 +52,6 @@
         .task-btn { background: var(--primary); border: none; padding: 8px 15px; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer; }
         
         #ad-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
-        .invite-stat { font-size: 18px; color: var(--primary); margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -87,12 +84,12 @@
         <i data-lucide="users" style="width: 60px; height: 60px; color: var(--primary); margin-top: 20px;"></i>
         <h2 style="color: var(--primary);">INVITE FRIENDS</h2>
         <p>Earn 5,000 $SHARK for every friend!</p>
-        <div class="invite-stat">Total Friends: <span id="friend-count">0</span></div>
-        <div class="info-card" id="ref-link" style="font-size: 11px; word-break: break-all;">Loading...</div>
+        <div class="info-card">Total Friends: <span id="friend-count">0</span></div>
+        <div class="info-card" id="ref-link" style="font-size: 11px; word-break: break-all; color: var(--primary);">Loading...</div>
         <button class="btn" onclick="copyRef()"><i data-lucide="copy"></i> COPY LINK</button>
         
         <div class="friend-list">
-            <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">YOUR FRIENDS</h4>
+            <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">YOUR FRIENDS LIST</h4>
             <div id="friends-container">
                 <p style="text-align:center; color:#555;">No friends invited yet.</p>
             </div>
@@ -109,9 +106,8 @@
         <div class="info-card">
             <h4 style="margin:0;">TON BLOCKCHAIN</h4>
             <div id="ton-connect-btn"></div>
-            <p id="conn-status" style="font-size: 12px; color: #888; margin:0;">Connect your wallet to enable withdrawal</p>
+            <p id="conn-status" style="font-size: 12px; color: #888; margin:0;">Connect wallet to withdraw</p>
         </div>
-        <button id="withdraw-btn" class="btn" style="background:#222; color:#555;" disabled>WITHDRAW (LOCKED)</button>
     </div>
 
     <div id="nav-bar">
@@ -122,7 +118,6 @@
 
     <script>
         lucide.createIcons();
-
         const firebaseConfig = {
             apiKey: "AIzaSyDJzyYMY4Iy-shwXkPz7c5ppWr75Wn9ngY",
             authDomain: "shark-bot-c515b.firebaseapp.com",
@@ -132,59 +127,40 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const tg = window.Telegram.WebApp;
-        tg.expand();
-
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
 
-        let tonConnectUI;
         document.addEventListener('DOMContentLoaded', () => {
-            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            new TON_CONNECT_UI.TonConnectUI({
                 manifestUrl: 'https://khanemon013111-wq.github.io/MegalodonSharkbot/tonconnect-manifest.json',
                 buttonRootId: 'ton-connect-btn'
             });
-
-            tonConnectUI.onStatusChange(wallet => {
-                const statusText = document.getElementById('conn-status');
-                if (wallet) {
-                    const address = wallet.account.address;
-                    statusText.innerText = "Connected: " + address.substring(0, 4) + "..." + address.substring(address.length - 4);
-                    statusText.style.color = "#00b4d8";
-                }
-            });
-            
             initUser();
         });
 
         function initUser() {
             if (userId === "guest") return;
-
-            // রেফারেল আইডি চেক করা
             const urlParams = new URLSearchParams(window.location.search);
-            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('tgWebAppStartParam');
+            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('startapp');
 
             db.ref('users/' + userId).once('value', (snap) => {
                 if(!snap.exists()) {
-                    // নতুন ইউজার ডাটাবেজে সেভ করা
-                    db.ref('users/' + userId).set({ 
-                        balance: 1000, 
-                        friends: 0,
-                        createdAt: Date.now()
+                    db.ref('users/' + userId).set({ balance: 1000, friends: 0, createdAt: Date.now() }).then(() => {
+                        if(startParam && startParam !== userId) {
+                            db.ref('users/' + startParam).once('value', (refSnap) => {
+                                if(refSnap.exists()) {
+                                    db.ref('users/' + startParam).update({
+                                        balance: (refSnap.val().balance || 0) + 5000,
+                                        friends: (refSnap.val().friends || 0) + 1
+                                    });
+                                    // খাতা মেনটেইন করা
+                                    db.ref('friends_list/' + startParam + '/' + userId).set(true);
+                                }
+                            });
+                        }
                     });
-
-                    // যদি কেউ রেফারেল লিংকে জয়েন করে
-                    if(startParam && startParam !== userId) {
-                        db.ref('users/' + startParam).once('value', (refSnap) => {
-                            if(refSnap.exists()) {
-                                const refData = refSnap.val();
-                                db.ref('users/' + startParam).update({
-                                    balance: (refData.balance || 0) + 5000,
-                                    friends: (refData.friends || 0) + 1
-                                });
-                            }
-                        });
-                    }
                 }
                 loadData();
+                loadFriendsList();
             });
         }
 
@@ -193,54 +169,37 @@
                 const data = snap.val();
                 if(data) {
                     document.getElementById('main-bal').innerText = (data.balance || 0).toLocaleString();
-                    document.getElementById('wallet-bal').innerText = (data.balance || 0).toLocaleString() + " $SHARK";
+                    document.getElementById('wallet-bal').innerText = (data.balance || 0).toLocaleString();
                     document.getElementById('friend-count').innerText = data.friends || 0;
                     document.getElementById('display-userid').innerText = "ID: " + userId;
-                    checkBonusTimer(data.lastBonus);
                 }
             });
-            // সঠিক রেফারেল লিংক জেনারেট করা
-            document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
+            document.getElementById('ref-link').innerText = "https://t.me/MegalodonSharkbot?start=" + userId;
         }
 
-        function checkBonusTimer(lastBonus) {
-            const btn = document.getElementById('bonus-btn');
-            const cooldownText = document.getElementById('cooldown-text');
-            if (!lastBonus) return;
-            const now = Date.now();
-            const dayInMs = 24 * 60 * 60 * 1000;
-            const timeLeft = dayInMs - (now - lastBonus);
-            if (timeLeft > 0) {
-                btn.disabled = true;
-                const h = Math.floor(timeLeft / 3600000);
-                const m = Math.floor((timeLeft % 3600000) / 60000);
-                cooldownText.innerText = `Available in ${h}h ${m}m`;
-            } else {
-                btn.disabled = false;
-                cooldownText.innerText = "";
-            }
+        function loadFriendsList() {
+            const container = document.getElementById('friends-container');
+            db.ref('friends_list/' + userId).on('value', (snap) => {
+                if(snap.exists()) {
+                    container.innerHTML = "";
+                    Object.keys(snap.val()).forEach(friendId => {
+                        container.innerHTML += `<div class="friend-item"><div><b>Friend ID: ${friendId}</b><br><small>Joined Successfully</small></div><span style="color:var(--primary)">+5,000 $SHARK</span></div>`;
+                    });
+                }
+            });
         }
 
         function watchAdToClaim() {
             const overlay = document.getElementById('ad-overlay');
             overlay.style.display = 'flex';
-            
-            // Monetag Ad Call
             if (typeof show_10414428 === 'function') {
                 show_10414428().then(() => {
                     overlay.style.display = 'none';
                     db.ref('users/' + userId).once('value', s => {
-                        const current = s.val().balance || 0;
-                        db.ref('users/' + userId).update({ balance: current + 500, lastBonus: Date.now() });
-                        alert("Success! 500 $SHARK bonus added.");
+                        db.ref('users/' + userId).update({ balance: (s.val().balance || 0) + 500, lastBonus: Date.now() });
+                        alert("Bonus Added!");
                     });
-                }).catch(() => {
-                    overlay.style.display = 'none';
-                    alert("Ad failed to load.");
-                });
-            } else {
-                overlay.style.display = 'none';
-                alert("Ads are not ready.");
+                }).catch(() => { overlay.style.display = 'none'; });
             }
         }
 
@@ -268,10 +227,8 @@
         }
 
         function copyRef() {
-            const link = document.getElementById('ref-link').innerText;
-            navigator.clipboard.writeText(link).then(() => {
-                alert("Referral Link Copied!");
-            });
+            navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
+            alert("Referral Link Copied!");
         }
     </script>
 </body>
