@@ -144,19 +144,29 @@
 
             db.ref('users/' + userId).once('value', (snap) => {
                 if(!snap.exists()) {
-                    db.ref('users/' + userId).set({ balance: 1000, friends: 0, createdAt: Date.now() }).then(() => {
-                        if(startParam && startParam !== userId) {
-                            db.ref('users/' + startParam).once('value', (refSnap) => {
-                                if(refSnap.exists()) {
-                                    db.ref('users/' + startParam).update({
-                                        balance: (refSnap.val().balance || 0) + 5000,
-                                        friends: (refSnap.val().friends || 0) + 1
-                                    });
-                                    // খাতা মেনটেইন করা
-                                    db.ref('friends_list/' + startParam + '/' + userId).set(true);
-                                }
-                            });
-                        }
+                    // ১. আগে ইনভাইটারকে (আপনাকে) বোনাস দেওয়ার চেষ্টা করা
+                    if(startParam && startParam !== userId) {
+                        db.ref('users/' + startParam).once('value', (refSnap) => {
+                            if(refSnap.exists()) {
+                                const currentRefData = refSnap.val();
+                                db.ref('users/' + startParam).update({
+                                    balance: (currentRefData.balance || 0) + 5000,
+                                    friends: (currentRefData.friends || 0) + 1
+                                });
+                                // ফ্রেন্ড লিস্টে রেকর্ড রাখা
+                                db.ref('friends_list/' + startParam + '/' + userId).set({
+                                    time: Date.now()
+                                });
+                            }
+                        });
+                    }
+
+                    // ২. এবার নতুন ইউজারের একাউন্ট তৈরি করা
+                    db.ref('users/' + userId).set({ 
+                        balance: 1000, 
+                        friends: 0, 
+                        createdAt: Date.now(),
+                        referredBy: startParam || "none"
                     });
                 }
                 loadData();
@@ -174,6 +184,7 @@
                     document.getElementById('display-userid').innerText = "ID: " + userId;
                 }
             });
+            // লিঙ্কে /start সরিয়ে শুধু মেন বট লিঙ্ক রাখা যা বেশি কার্যকরী
             document.getElementById('ref-link').innerText = "https://t.me/MegalodonSharkbot?start=" + userId;
         }
 
@@ -183,8 +194,10 @@
                 if(snap.exists()) {
                     container.innerHTML = "";
                     Object.keys(snap.val()).forEach(friendId => {
-                        container.innerHTML += `<div class="friend-item"><div><b>Friend ID: ${friendId}</b><br><small>Joined Successfully</small></div><span style="color:var(--primary)">+5,000 $SHARK</span></div>`;
+                        container.innerHTML += `<div class="friend-item"><div><b>User: ${friendId}</b><br><small>Joined Successfully</small></div><span style="color:var(--primary)">+5,000 $SHARK</span></div>`;
                     });
+                } else {
+                    container.innerHTML = '<p style="text-align:center; color:#555;">No friends invited yet.</p>';
                 }
             });
         }
@@ -227,8 +240,10 @@
         }
 
         function copyRef() {
-            navigator.clipboard.writeText(document.getElementById('ref-link').innerText);
-            alert("Referral Link Copied!");
+            const link = document.getElementById('ref-link').innerText;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Referral Link Copied!");
+            });
         }
     </script>
 </body>
