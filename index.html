@@ -75,14 +75,10 @@
         <div class="task-list">
             <h4 style="color: var(--primary); margin: 20px 0 10px 5px;">EARN MORE</h4>
             <div class="task-item">
-                <div><b>Join Channel</b><br><small>+10,000 $SHARK</small></div>
-                <button class="task-btn" onclick="completeTask('tg_task', 10000, 'https://t.me/MegalodonSharkbot')">JOIN</button>
+                <div><b>Join Community</b><br><small>+10,000 $SHARK</small></div>
+                <button class="task-btn" onclick="completeTask('tg_task', 10000, 'https://t.me/MegalodonSharkCommunity')">JOIN</button>
             </div>
-            <div class="task-item">
-                <div><b>Subscribe YouTube</b><br><small>+15,000 $SHARK</small></div>
-                <button class="task-btn" onclick="completeTask('yt_task', 15000, 'https://youtube.com/@your_channel')">SUB</button>
             </div>
-        </div>
     </div>
 
     <div id="invite" class="screen">
@@ -125,7 +121,6 @@
     <script>
         lucide.createIcons();
 
-        // ১. Firebase Setup (API Key Corrected)
         const firebaseConfig = {
             apiKey: "AIzaSyDJzyYMY4Iy-shwXkPz7c5ppWr75Wn9ngY",
             authDomain: "shark-bot-c515b.firebaseapp.com",
@@ -137,7 +132,6 @@
         const tg = window.Telegram.WebApp;
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
 
-        // ২. TON Connect Setup (Initialized after DOM load)
         let tonConnectUI;
         document.addEventListener('DOMContentLoaded', () => {
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
@@ -145,34 +139,32 @@
                 buttonRootId: 'ton-connect-btn'
             });
 
-            // Handle Wallet Connection Status
             tonConnectUI.onStatusChange(wallet => {
                 const statusText = document.getElementById('conn-status');
                 if (wallet) {
                     const address = wallet.account.address;
                     statusText.innerText = "Connected: " + address.substring(0, 4) + "..." + address.substring(address.length - 4);
                     statusText.style.color = "#00b4d8";
-                } else {
-                    statusText.innerText = "Connect your wallet to enable withdrawal";
-                    statusText.style.color = "#888";
                 }
             });
             
             initUser();
         });
 
-        // Initialize User
         function initUser() {
             if (userId === "guest") return;
             db.ref('users/' + userId).once('value', (snap) => {
                 if(!snap.exists()) {
-                    db.ref('users/' + userId).set({ balance: 1000, friends: 0 });
+                    db.ref('users/' + userId).set({ 
+                        balance: 1000, 
+                        friends: 0,
+                        createdAt: Date.now()
+                    });
                 }
                 loadData();
             });
         }
 
-        // Load Real-time Data
         function loadData() {
             db.ref('users/' + userId).on('value', (snap) => {
                 const data = snap.val();
@@ -186,16 +178,13 @@
             document.getElementById('ref-link').innerText = `https://t.me/MegalodonSharkbot/start?startapp=${userId}`;
         }
 
-        // ২৪ ঘণ্টা বোনাস সিস্টেম
         function checkBonusTimer(lastBonus) {
             const btn = document.getElementById('bonus-btn');
             const cooldownText = document.getElementById('cooldown-text');
             if (!lastBonus) return;
-
             const now = Date.now();
             const dayInMs = 24 * 60 * 60 * 1000;
             const timeLeft = dayInMs - (now - lastBonus);
-
             if (timeLeft > 0) {
                 btn.disabled = true;
                 const h = Math.floor(timeLeft / 3600000);
@@ -207,24 +196,19 @@
             }
         }
 
-        // মনিটেগ রিওয়ার্ডেড বিজ্ঞাপন
         function watchAdToClaim() {
             const overlay = document.getElementById('ad-overlay');
             overlay.style.display = 'flex';
-
             show_10414428().then(() => {
                 overlay.style.display = 'none';
                 db.ref('users/' + userId).once('value', s => {
                     const current = s.val().balance || 0;
-                    db.ref('users/' + userId).update({ 
-                        balance: current + 500,
-                        lastBonus: Date.now() 
-                    });
+                    db.ref('users/' + userId).update({ balance: current + 500, lastBonus: Date.now() });
                     alert("Success! 500 $SHARK bonus added.");
                 });
             }).catch(() => {
                 overlay.style.display = 'none';
-                alert("Ad not ready yet. Please try again later.");
+                alert("Ad not ready yet.");
             });
         }
 
@@ -258,4 +242,4 @@
     </script>
 </body>
     </html>
-
+    
