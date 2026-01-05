@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="monetag" content="d686104263ea095e5938f6f704b745b3">
     <script src='//libtl.com/sdk.js' data-zone='10414428' data-sdk='show_10414428'></script>
-    <title>SHARK TOKEN - Professional Airdrop</title>
+    <title>SHARK TOKEN - Official Airdrop</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -26,78 +26,79 @@
         .premium-title { font-family: 'Syncopate', sans-serif; letter-spacing: 2px; font-size: 9px; color: var(--neon-blue); text-transform: uppercase; margin-bottom: 15px; }
         .balance-val { font-family: 'Syncopate', sans-serif; font-size: 35px; font-weight: 700; margin: 5px 0; color: #fff; }
         .premium-card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 15px; margin-bottom: 12px; backdrop-filter: blur(10px); }
-        .btn-premium { background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); border: none; padding: 15px; color: white; border-radius: 15px; width: 100%; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        
-        /* Modal Styling */
-        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-box { background: #020b18; border: 1px solid var(--neon-blue); width: 85%; border-radius: 25px; padding: 20px; text-align: center; }
-        .day-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 15px 0; }
-        .day-item { background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 8px 2px; border-radius: 8px; font-size: 9px; color: var(--gray); }
-        .day-item.done { background: var(--neon-blue); color: #000; }
+        .btn-premium { background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); border: none; padding: 15px; color: white; border-radius: 15px; width: 100%; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .btn-premium:disabled { background: #1a222c; opacity: 0.5; cursor: not-allowed; }
 
-        /* Nav & Ranks */
+        /* Modal styling */
+        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .modal-box { background: #020b18; border: 1px solid var(--neon-blue); width: 88%; border-radius: 25px; padding: 20px; text-align: center; }
+        .day-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+        .day-item { background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 12px 5px; border-radius: 12px; }
+        .day-item.done { background: var(--neon-blue); color: #000; font-weight: bold; }
+        
         .rank-item { display: flex; align-items: center; justify-content: space-between; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 15px; margin-bottom: 8px; }
         #nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: rgba(1, 8, 18, 0.98); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-        .nav-item { color: var(--gray); display: flex; flex-direction: column; align-items: center; flex: 1; font-size: 8px; font-weight: bold; cursor: pointer; }
-        .nav-item.active { color: var(--neon-blue); }
+        .nav-item { color: var(--gray); display: flex; flex-direction: column; align-items: center; flex: 1; font-size: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: var(--neon-blue); transform: translateY(-3px); }
     </style>
 </head>
 <body>
 
     <div id="home" class="screen active-screen">
         <div style="font-size: 50px; margin-top: 10px;">🦈</div>
-        <div class="premium-title">Total Assets</div>
+        <div class="premium-title">Available Balance</div>
         <div class="balance-val" id="main-bal">0</div>
         
-        <div class="premium-card" onclick="openCheckin()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+        <div class="premium-card" onclick="openCheckin()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 15px;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <i data-lucide="calendar" style="color: var(--neon-blue);"></i>
-                <div style="text-align: left;"><div style="font-weight: 700;">Daily Rewards</div><div style="font-size: 10px; color: var(--gray);">Check-in Daily</div></div>
+                <div style="text-align: left;"><div style="font-weight: 700;">Daily Rewards</div><div style="font-size: 10px; color: var(--gray);">Streak to earn more</div></div>
             </div>
             <i data-lucide="chevron-right" style="width: 16px;"></i>
         </div>
 
-        <button id="bonus-btn" class="btn-premium" onclick="watchAdToClaim()">
-            <i data-lucide="play-circle"></i> <span id="reward-text">VIDEO BONUS (+20)</span>
+        <button id="bonus-btn" class="btn-premium" onclick="watchAdToClaim()" style="margin-top: 10px;">
+            <i data-lucide="play-circle"></i> <span id="reward-text">WATCH VIDEO (+10)</span>
         </button>
+        <div id="video-count-text" style="font-size: 11px; color: var(--gray); margin-top: 8px; font-weight: bold;">Daily Limit: 0/5 Videos</div>
     </div>
 
     <div id="wallet" class="screen">
-        <div class="premium-title">Wallet Center</div>
+        <div class="premium-title">Digital Wallet</div>
         <div class="premium-card">
             <h1 id="wallet-bal" class="balance-val">0</h1>
             <div id="ton-connect-btn" style="display: flex; justify-content: center; margin: 15px 0;"></div>
             <button class="btn-premium" onclick="handleWithdraw()">
-                <i data-lucide="arrow-down-to-line"></i> WITHDRAW $SHARK
+                <i data-lucide="arrow-down-to-line"></i> CLAIM $SHARK
             </button>
-            <p style="font-size: 9px; color: #ffc107; margin-top: 10px;">* Gas fee 0.1 TON required.</p>
+            <p style="font-size: 9px; color: #ffc107; margin-top: 10px;">* Network gas fee: 0.1 TON (Sent to dev wallet)</p>
         </div>
         <div class="premium-card" style="text-align: left;">
-            <div class="premium-title" style="font-size: 8px;">Ref Link</div>
-            <div id="ref-link" style="font-size: 10px; background: #000; padding: 10px; border-radius: 8px; word-break: break-all;">Loading...</div>
+            <div class="premium-title" style="font-size: 8px;">Your Referral Link</div>
+            <div id="ref-link" style="font-size: 10px; background: #000; padding: 12px; border-radius: 8px; word-break: break-all;">Loading...</div>
             <button class="btn-premium" style="padding: 10px;" onclick="copyRef()">COPY LINK</button>
         </div>
     </div>
 
     <div id="leaderboard" class="screen">
-        <div class="premium-title">Global Ranking</div>
+        <div class="premium-title">Shark Ranking</div>
         <div id="leaderboard-container"></div>
     </div>
 
     <div id="supply" class="screen">
-        <div class="premium-title">Supply</div>
+        <div class="premium-title">Token Ecosystem</div>
         <div class="premium-card" style="padding: 40px 20px;">
-            <div style="font-size: 12px; color: var(--gray);">Remaining to Mine</div>
+            <div style="font-size: 12px; color: var(--gray);">Remaining Supply Pool</div>
             <div id="remaining-supply" class="balance-val" style="color: #ff4757;">10,000,000</div>
         </div>
     </div>
 
     <div id="modal-overlay">
         <div class="modal-box">
-            <div class="premium-title">Daily Check-in</div>
+            <div class="premium-title">Daily Reward Pool</div>
             <div class="day-grid" id="checkin-grid"></div>
-            <button id="claim-now-btn" class="btn-premium" onclick="handleDailyWithAd()">CLAIM REWARD</button>
-            <button style="background:transparent; border:none; color:var(--gray); margin-top: 15px;" onclick="document.getElementById('modal-overlay').style.display='none'">CLOSE</button>
+            <button id="claim-now-btn" class="btn-premium" onclick="handleDailyWithAd()">CLAIM NOW</button>
+            <button style="background:transparent; border:none; color:var(--gray); margin-top: 15px; font-weight: bold;" onclick="document.getElementById('modal-overlay').style.display='none'">CLOSE</button>
         </div>
     </div>
 
@@ -116,53 +117,38 @@
         const tg = window.Telegram.WebApp;
         const userId = tg.initDataUnsafe?.user?.id?.toString() || "guest";
         const TOTAL_CAP = 10000000;
-        const dailyRewards = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+        const dailyRewards = [50, 100, 150, 200, 300, 400, 500, 700, 1000];
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({ manifestUrl: 'https://khanemon013111-wq.github.io/MegalodonSharkbot/tonconnect-manifest.json', buttonRootId: 'ton-connect-btn' });
 
-        // Withdrawal
-        async function handleWithdraw() {
-            if (!tonConnectUI.connected) { tg.showAlert("Please connect wallet!"); return; }
-            const bal = parseInt(document.getElementById('wallet-bal').innerText.replace(/,/g, ''));
-            if (bal <= 0) return;
-            const transaction = { validUntil: Math.floor(Date.now() / 1000) + 300, messages: [{ address: "UQDr2Mh1slwmh1zWHvabVgRI4KgnU6_fG8P_raK67BOPz_sv", amount: "100000000" }] };
-            try {
-                const result = await tonConnectUI.sendTransaction(transaction);
-                if (result) {
-                    db.ref('withdraw_requests/' + userId).set({ wallet: tonConnectUI.account.address, amount: bal, status: "Pending", time: new Date().toLocaleString() });
-                    db.ref('users/' + userId).update({ balance: 0 });
-                    tg.showAlert("Success! Balance reset.");
-                }
-            } catch (e) { tg.showAlert("Failed."); }
-        }
-
-        // Daily Check-in Logic
-        function openCheckin() { document.getElementById('modal-overlay').style.display = 'flex'; }
-        
-        async function handleDailyWithAd() {
+        // Video Ads Logic: 5 Videos limit, 10 tokens reward
+        async function watchAdToClaim() {
             db.ref('users/'+userId).once('value', async s => {
                 const d = s.val();
-                let st = (Date.now() - (d.lastCheckin || 0) > 172800000) ? 0 : d.streak || 0;
-                let amount = dailyRewards[st % 10];
+                const now = Date.now();
+                // 12 hours reset for video tasks
+                if (now - (d.lastVideoReset || 0) > 43200000) {
+                    await db.ref('users/'+userId).update({ videoCount: 0, lastVideoReset: now });
+                }
+
+                if ((d.videoCount || 0) >= 5) {
+                    tg.showAlert("Daily video limit reached! Come back in 12 hours.");
+                    return;
+                }
+
                 if (typeof show_10414428 === 'function') {
-                    show_10414428().then(() => { 
-                        db.ref('users/' + userId).update({ balance: (d.balance || 0) + amount, streak: st + 1, lastCheckin: Date.now() });
-                        db.ref('global/totalDistributed').transaction(c => (c || 0) + amount);
-                        document.getElementById('modal-overlay').style.display = 'none';
-                        tg.showAlert("Daily Reward Claimed: " + amount);
+                    show_10414428().then(() => {
+                        db.ref('users/'+userId).update({ 
+                            balance: (d.balance || 0) + 10, 
+                            videoCount: (d.videoCount || 0) + 1 
+                        });
+                        db.ref('global/totalDistributed').transaction(c => (c || 0) + 10);
+                        tg.showAlert("Success! +10 $SHARK added to your balance.");
                     });
                 }
             });
         }
 
-        function refreshCheckinUI(streak, last) {
-            let html = ''; for(let i=0; i<10; i++) {
-                let cls = (i < (streak % 10)) ? 'done' : '';
-                html += `<div class="day-item ${cls}">D${i+1}</div>`;
-            }
-            document.getElementById('checkin-grid').innerHTML = html;
-            document.getElementById('claim-now-btn').disabled = (Date.now() - last < 86400000);
-        }
-
+        // Initialize User with Reset check
         function initUser() {
             if (userId === "guest") return;
             db.ref('users/' + userId).on('value', snap => {
@@ -170,35 +156,99 @@
                 if(d) {
                     document.getElementById('main-bal').innerText = (d.balance || 0).toLocaleString();
                     document.getElementById('wallet-bal').innerText = (d.balance || 0).toLocaleString();
+                    document.getElementById('video-count-text').innerText = `Daily Limit: ${d.videoCount || 0}/5 Videos`;
                     document.getElementById('ref-link').innerText = "https://t.me/MegalodonSharkbot/shark?startapp=" + userId;
                     refreshCheckinUI(d.streak || 0, d.lastCheckin || 0);
+
+                    // Button Lock UI
+                    const videoBtn = document.getElementById('bonus-btn');
+                    if (d.videoCount >= 5 && (Date.now() - d.lastVideoReset < 43200000)) {
+                        videoBtn.disabled = true;
+                        document.getElementById('reward-text').innerText = "LIMIT REACHED";
+                    } else {
+                        videoBtn.disabled = false;
+                        document.getElementById('reward-text').innerText = "WATCH VIDEO (+10)";
+                    }
                 } else {
-                    db.ref('users/' + userId).set({ name: tg.initDataUnsafe?.user?.first_name || "User", balance: 0, streak: 0, lastCheckin: 0 });
+                    // Create new profile with 0 balance
+                    db.ref('users/' + userId).set({ 
+                        name: tg.initDataUnsafe?.user?.first_name || "Shark Miner", 
+                        balance: 0, streak: 0, lastCheckin: 0, videoCount: 0, lastVideoReset: 0 
+                    });
                 }
             });
+            loadSupply();
         }
 
+        // Withdrawal Logic: 0.1 TON Gas Fee + Balance Reset
+        async function handleWithdraw() {
+            if (!tonConnectUI.connected) { tg.showAlert("Please connect TON wallet!"); return; }
+            const bal = parseInt(document.getElementById('wallet-bal').innerText.replace(/,/g, ''));
+            if (bal <= 0) { tg.showAlert("No balance to claim!"); return; }
+            
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 300,
+                messages: [{
+                    address: "UQDr2Mh1slwmh1zWHvabVgRI4KgnU6_fG8P_raK67BOPz_sv", // Your TON address
+                    amount: "100000000", // 0.1 TON
+                }]
+            };
+
+            try {
+                const result = await tonConnectUI.sendTransaction(transaction);
+                if (result) {
+                    db.ref('withdraw_requests/' + userId).set({
+                        name: tg.initDataUnsafe?.user?.first_name || "User",
+                        wallet: tonConnectUI.account.address,
+                        amount: bal, status: "Pending", time: new Date().toLocaleString()
+                    });
+                    // Critical: Reset balance to 0 after success
+                    db.ref('users/' + userId).update({ balance: 0 });
+                    tg.showAlert("Success! Withdrawal requested. Balance reset to zero.");
+                }
+            } catch (e) { tg.showAlert("Transaction canceled by user."); }
+        }
+
+        // Leaderboard Function
         function loadLeaderboard() {
             db.ref('users').orderByChild('balance').limitToLast(10).once('value', snap => {
                 let list = []; snap.forEach(u => { list.push(u.val()); });
                 list.sort((a,b) => (b.balance || 0) - (a.balance || 0));
                 let html = ''; list.forEach((u, i) => {
-                    html += `<div class="rank-item"><div><b>#${i+1}</b> ${u.name || 'User'}</div><div style="color:var(--neon-blue); font-family:Syncopate;">${(u.balance || 0).toLocaleString()}</div></div>`;
+                    html += `<div class="rank-item"><div><b>#${i+1}</b> ${u.name || 'Anonymous'}</div><div style="color:var(--neon-blue); font-family:Syncopate; font-size:11px;">${(u.balance || 0).toLocaleString()}</div></div>`;
                 });
                 document.getElementById('leaderboard-container').innerHTML = html;
             });
         }
 
-        async function watchAdToClaim() {
-            if (typeof show_10414428 === 'function') {
-                show_10414428().then(() => {
-                    db.ref('users/'+userId).once('value', s => {
-                        const d = s.val();
-                        db.ref('users/'+userId).update({ balance: (d.balance || 0) + 20 });
-                        db.ref('global/totalDistributed').transaction(c => (c || 0) + 20);
+        // Checkin UI Helper
+        function openCheckin() { document.getElementById('modal-overlay').style.display = 'flex'; }
+        
+        async function handleDailyWithAd() {
+            db.ref('users/'+userId).once('value', async s => {
+                const d = s.val();
+                let st = (Date.now() - (d.lastCheckin || 0) > 172800000) ? 0 : d.streak || 0;
+                let amount = dailyRewards[st % dailyRewards.length];
+                if (typeof show_10414428 === 'function') {
+                    show_10414428().then(() => { 
+                        db.ref('users/' + userId).update({ balance: (d.balance || 0) + amount, streak: st + 1, lastCheckin: Date.now() });
+                        db.ref('global/totalDistributed').transaction(c => (c || 0) + amount);
+                        document.getElementById('modal-overlay').style.display = 'none';
+                        tg.showAlert(`Claimed Day ${st+1} reward: ${amount} $SHARK`);
                     });
-                });
+                }
+            });
+        }
+
+        function refreshCheckinUI(streak, last) {
+            let html = ''; for(let i=0; i < dailyRewards.length; i++) {
+                let cls = (i < (streak % 10)) ? 'done' : '';
+                html += `<div class="day-item ${cls}"><span style="font-size:8px;">DAY ${i+1}</span><br><b>${dailyRewards[i]}</b></div>`;
             }
+            document.getElementById('checkin-grid').innerHTML = html;
+            const canClaim = (Date.now() - last >= 86400000);
+            document.getElementById('claim-now-btn').disabled = !canClaim;
+            document.getElementById('claim-now-btn').innerText = canClaim ? "CLAIM NOW" : "COME BACK TOMORROW";
         }
 
         function loadSupply() {
@@ -215,9 +265,9 @@
             el.classList.add('active'); lucide.createIcons();
         }
 
-        function copyRef() { navigator.clipboard.writeText(document.getElementById('ref-link').innerText); tg.showAlert("Copied!"); }
+        function copyRef() { navigator.clipboard.writeText(document.getElementById('ref-link').innerText); tg.showAlert("Referral link copied!"); }
         document.addEventListener('DOMContentLoaded', initUser);
     </script>
 </body>
-    </html>
-                                                                                                
+</html>
+
