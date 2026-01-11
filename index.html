@@ -29,11 +29,19 @@
         .btn-premium { background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); border: none; padding: 15px; color: white; border-radius: 15px; width: 100%; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
         .btn-premium:disabled { background: #1a222c; opacity: 0.5; cursor: not-allowed; }
 
-        /* Robot Specific Animation */
         @keyframes robotPulse { 0% { transform: scale(1); filter: drop-shadow(0 0 2px var(--neon-blue)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 10px var(--neon-blue)); } 100% { transform: scale(1); filter: drop-shadow(0 0 2px var(--neon-blue)); } }
         .mining-active-icon { animation: robotPulse 1.5s infinite ease-in-out; }
-        .progress-bar-bg { background: rgba(255,255,255,0.05); height: 8px; border-radius: 10px; margin: 12px 0; overflow: hidden; }
-        .progress-bar-fill { background: var(--neon-blue); height: 100%; width: 0%; transition: 0.4s; }
+
+        /* Leaderboard Style */
+        .rank-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.05); padding: 12px 15px; border-radius: 15px; margin-bottom: 8px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .rank-left { display: flex; align-items: center; gap: 12px; }
+        .rank-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; font-family: 'Syncopate'; }
+        .rank-1 { background: #FFD700; color: #000; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+        .rank-2 { background: #C0C0C0; color: #000; }
+        .rank-3 { background: #CD7F32; color: #000; }
+        .rank-other { background: rgba(255,255,255,0.1); color: #fff; }
+        .rank-name { font-weight: 600; font-size: 13px; }
+        .rank-bal { font-family: 'Syncopate'; font-size: 11px; color: var(--neon-blue); }
 
         .task-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 15px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .task-info { text-align: left; }
@@ -74,15 +82,14 @@
 
         <div class="premium-title">Mining Robot 🤖</div>
         <div class="premium-card" style="border-color: var(--neon-blue);">
-            <div id="robot-icon" style="font-size: 30px; margin-bottom: 5px;">🤖</div>
-            <div id="robot-level-text" style="font-family:Syncopate; font-size: 10px; color: var(--neon-blue);">LEVEL: 0 / 10</div>
-            <div class="progress-bar-bg"><div id="robot-progress" class="progress-bar-fill"></div></div>
+            <div id="robot-icon" style="font-size: 40px; margin-bottom: 10px;">🤖</div>
             <button id="btn-robot" class="btn-premium" onclick="upgradeRobot()">
-                <i data-lucide="zap"></i> <span id="robot-btn-text">START BOOST (1/10)</span>
+                <i data-lucide="zap"></i> <span id="robot-btn-text">WATCH AD TO START MINING</span>
             </button>
             <div id="robot-timer" style="font-family:Syncopate; font-size: 20px; color: #ff4757; margin-top: 10px; display: none;">00:00:00</div>
-            <div id="mining-status" style="font-size: 10px; color: #00ff88; margin-top: 5px; font-weight: bold; display: none;">ROBOT IS MINING...</div>
+            <div id="mining-status" style="font-size: 10px; color: #00ff88; font-weight: bold; display: none;">ROBOT MINING (12H) ACTIVE</div>
         </div>
+
         <div class="premium-title" style="margin-top: 20px;">Social Missions</div>
         <div class="task-card">
             <div class="task-info"><div>Join Telegram Channel</div><span>+100 $SHARK</span></div>
@@ -101,7 +108,6 @@
             <div id="ton-connect-btn" style="display: flex; justify-content: center; margin: 15px 0;"></div>
             <button class="btn-premium" style="background: #1a222c;" disabled><i data-lucide="lock"></i> COMING SOON</button>
             <p style="font-size: 10px; color: var(--neon-blue); margin-top: 15px; font-weight: bold;">🚀 Withdrawal opens after 10M $SHARK Mining!</p>
-            <p style="font-size: 9px; color: #ffc107; margin-top: 5px;">* Network gas fee: 0.1 TON (Sent to dev wallet)</p>
         </div>
         <div class="premium-card" style="text-align: left;">
             <div class="premium-title" style="font-size: 8px;">Your Referral Link</div>
@@ -111,6 +117,7 @@
     </div>
 
     <div id="leaderboard" class="screen"><div class="premium-title">Shark Ranking</div><div id="leaderboard-container"></div></div>
+    
     <div id="supply" class="screen"><div class="premium-title">Token Ecosystem</div><div class="premium-card" style="padding: 40px 20px;"><div style="font-size: 12px; color: var(--gray);">Remaining Supply Pool</div><div id="remaining-supply" class="balance-val" style="color: #ff4757;">10,000,000</div></div></div>
 
     <div id="modal-overlay">
@@ -144,47 +151,39 @@
             db.ref('global/totalDistributed').transaction(current => (current || 0) + amount);
         }
 
-        // --- Robot Logic ---
+        // --- 12H Robot Mining (Single Ad) ---
         function upgradeRobot() {
             if (typeof show_10414428 === 'function') {
                 show_10414428('pop').then(() => {
                     db.ref('users/'+userId).once('value', s => {
                         const d = s.val() || {};
-                        let nextLvl = (d.robotLevel || 0) + 1;
-                        let update = { robotLevel: nextLvl };
-                        if (nextLvl >= 10) { 
-                            update.robotLevel = 10; 
-                            update.robotStartTime = Date.now(); 
-                            update.balance = (d.balance || 0) + 500; 
-                            updateGlobalSupply(500);
-                        }
-                        db.ref('users/'+userId).update(update);
+                        db.ref('users/'+userId).update({ miningActive: true, robotStartTime: Date.now(), balance: (d.balance || 0) + 500 });
+                        updateGlobalSupply(500);
+                        tg.showAlert("Mining Started! +500 $SHARK Bonus!");
                     });
                 });
             }
         }
 
         function updateRobotUI(d) {
-            const lvl = d.robotLevel || 0;
-            const start = d.robotStartTime || 0;
             const now = Date.now();
-            document.getElementById('robot-progress').style.width = (lvl * 10) + "%";
-            document.getElementById('robot-level-text').innerText = `LEVEL: ${lvl} / 10`;
+            const isActive = d.miningActive || false;
+            const start = d.robotStartTime || 0;
+            const duration = 43200000; // 12 Hours
 
-            if (lvl >= 10 && (now - start < 43200000)) {
+            if (isActive && (now - start < duration)) {
                 document.getElementById('btn-robot').style.display = 'none';
                 document.getElementById('robot-timer').style.display = 'block';
                 document.getElementById('mining-status').style.display = 'block';
                 document.getElementById('robot-icon').classList.add('mining-active-icon');
-                startCountdown(43200000 - (now - start));
-            } else if (lvl >= 10) {
-                db.ref('users/'+userId).update({ robotLevel: 0, robotStartTime: 0 });
+                startCountdown(duration - (now - start));
+            } else if (isActive) {
+                db.ref('users/'+userId).update({ miningActive: false, robotStartTime: 0 });
             } else {
                 document.getElementById('btn-robot').style.display = 'flex';
                 document.getElementById('robot-timer').style.display = 'none';
                 document.getElementById('mining-status').style.display = 'none';
                 document.getElementById('robot-icon').classList.remove('mining-active-icon');
-                document.getElementById('robot-btn-text').innerText = `START BOOST (${lvl + 1}/10)`;
             }
         }
 
@@ -197,6 +196,75 @@
             }, 1000);
         }
 
+        // --- 24H Video System ---
+        async function watchAdToClaim() {
+            db.ref('users/'+userId).once('value', s => {
+                const d = s.val() || {};
+                const now = Date.now();
+                if (now - (d.lastVideoReset || 0) >= 86400000) {
+                    db.ref('users/'+userId).update({ videoCount: 0, lastVideoReset: now });
+                    d.videoCount = 0;
+                }
+                if ((d.videoCount || 0) >= 5) { tg.showAlert("Daily limit reached!"); return; }
+                if (typeof show_10414428 === 'function') {
+                    show_10414428().then(() => {
+                        const newCount = (d.videoCount || 0) + 1;
+                        let up = { balance: (d.balance || 0) + 10, videoCount: newCount };
+                        if(newCount === 1) up.lastVideoReset = Date.now();
+                        db.ref('users/'+userId).update(up);
+                        updateGlobalSupply(10);
+                        tg.showAlert("Success! +10 $SHARK");
+                    });
+                }
+            });
+        }
+
+        function updateVideoUI(d) {
+            const btn = document.getElementById('bonus-btn');
+            const txt = document.getElementById('video-count-text');
+            const diff = Date.now() - (d.lastVideoReset || 0);
+            if (d.videoCount >= 5) {
+                if (diff < 86400000) {
+                    const rem = 86400000 - diff;
+                    const h = Math.floor(rem / 3600000); const m = Math.floor((rem % 3600000) / 60000);
+                    btn.disabled = true;
+                    document.getElementById('reward-text').innerText = `NEXT IN ${h}H ${m}M`;
+                    txt.innerText = `Reset in: ${h}h ${m}m`;
+                } else { db.ref('users/'+userId).update({ videoCount: 0 }); }
+            } else {
+                btn.disabled = false;
+                document.getElementById('reward-text').innerText = "WATCH VIDEO (+10)";
+                txt.innerText = `Daily Limit: ${d.videoCount || 0}/5 Videos`;
+            }
+        }
+
+        // --- Premium Leaderboard ---
+        function loadLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = '<div style="color:var(--gray); margin-top:20px;">Fetching Sharks...</div>';
+            db.ref('users').orderByChild('balance').limitToLast(20).once('value', snap => {
+                let list = []; snap.forEach(u => { let data = u.val(); data.id = u.key; list.push(data); });
+                list.sort((a,b) => (b.balance || 0) - (a.balance || 0));
+                let html = '';
+                list.forEach((u, i) => {
+                    const rank = i+1;
+                    let rClass = 'rank-other'; let medal = '🦈';
+                    if(rank===1){ rClass='rank-1'; medal='🥇'; }
+                    else if(rank===2){ rClass='rank-2'; medal='🥈'; }
+                    else if(rank===3){ rClass='rank-3'; medal='🥉'; }
+                    html += `
+                        <div class="rank-item" ${u.id === userId ? 'style="border: 1px solid var(--neon-blue); background: rgba(0,212,255,0.05);"' : ''}>
+                            <div class="rank-left">
+                                <div class="rank-num ${rClass}">${rank}</div>
+                                <div class="rank-name">${medal} ${u.name || 'Miner'} ${u.id === userId ? '(You)' : ''}</div>
+                            </div>
+                            <div class="rank-bal">${(u.balance || 0).toLocaleString()}</div>
+                        </div>`;
+                });
+                container.innerHTML = html;
+            });
+        }
+
         // --- Core Functions ---
         function initUser() {
             if (userId === "guest") return;
@@ -205,37 +273,22 @@
                 if(d) {
                     document.getElementById('main-bal').innerText = (d.balance || 0).toLocaleString();
                     document.getElementById('wallet-bal').innerText = (d.balance || 0).toLocaleString();
-                    document.getElementById('video-count-text').innerText = `Daily Limit: ${d.videoCount || 0}/5 Videos`;
                     document.getElementById('ref-link').innerText = "https://t.me/MegalodonSharkbot/shark?startapp=" + userId;
                     updateRobotUI(d);
+                    updateVideoUI(d);
                     refreshCheckinUI(d.streak || 0, d.lastCheckin || 0);
                     if(d.tgTask) { document.getElementById('btn-tg').innerText = "DONE"; document.getElementById('btn-tg').disabled = true; }
                     if(d.twTask) { document.getElementById('btn-tw').innerText = "DONE"; document.getElementById('btn-tw').disabled = true; }
                 } else {
-                    db.ref('users/' + userId).set({ name: tg.initDataUnsafe?.user?.first_name || "Shark Miner", balance: 0, streak: 0, lastCheckin: 0, videoCount: 0, lastVideoReset: 0, robotLevel: 0 });
+                    db.ref('users/' + userId).set({ name: tg.initDataUnsafe?.user?.first_name || "Shark Miner", balance: 0, streak: 0, lastCheckin: 0, videoCount: 0, lastVideoReset: Date.now(), miningActive: false });
                 }
             });
             loadSupply();
         }
 
-        async function watchAdToClaim() {
-            db.ref('users/'+userId).once('value', s => {
-                const d = s.val();
-                if ((d.videoCount || 0) >= 5) { tg.showAlert("Daily limit reached!"); return; }
-                if (typeof show_10414428 === 'function') {
-                    show_10414428().then(() => {
-                        db.ref('users/'+userId).update({ balance: (d.balance || 0) + 10, videoCount: (d.videoCount || 0) + 1 });
-                        updateGlobalSupply(10);
-                        tg.showAlert("Success! +10 $SHARK");
-                    });
-                }
-            });
-        }
-
         function handleSocialTask(type, link) {
             db.ref('users/'+userId).once('value', s => {
-                const d = s.val();
-                const key = type === 'tg' ? 'tgTask' : 'twTask';
+                const d = s.val(); const key = type === 'tg' ? 'tgTask' : 'twTask';
                 if (d[key]) return;
                 tg.openLink(link);
                 setTimeout(() => {
@@ -247,19 +300,7 @@
             });
         }
 
-        function loadLeaderboard() {
-            db.ref('users').orderByChild('balance').limitToLast(10).once('value', snap => {
-                let list = []; snap.forEach(u => { list.push(u.val()); });
-                list.sort((a,b) => (b.balance || 0) - (a.balance || 0));
-                let html = ''; list.forEach((u, i) => {
-                    html += `<div class="rank-item"><div><b>#${i+1}</b> ${u.name || 'Anonymous'}</div><div style="color:var(--neon-blue); font-family:Syncopate; font-size:11px;">${(u.balance || 0).toLocaleString()}</div></div>`;
-                });
-                document.getElementById('leaderboard-container').innerHTML = html;
-            });
-        }
-
         function openCheckin() { document.getElementById('modal-overlay').style.display = 'flex'; }
-        
         async function handleDailyWithAd() {
             if (typeof show_10414428 === 'function') {
                 show_10414428().then(() => { 
@@ -304,5 +345,4 @@
         document.addEventListener('DOMContentLoaded', initUser);
     </script>
 </body>
-                </html>
-    
+</html>
